@@ -1,15 +1,29 @@
+import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/ui'
+import GoalsClient from '@/components/goals/GoalsClient'
 
-export default function Page() {
+export const dynamic = 'force-dynamic'
+
+export default async function GoalsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [{ data: goals }, { data: tasks }] = await Promise.all([
+    supabase.from('goals').select('*').eq('owner_id', user!.id).order('created_at', { ascending: false }),
+    supabase.from('tasks').select('id, title, status, goal_id').eq('owner_id', user!.id),
+  ])
+
   return (
     <div>
       <PageHeader
-        title="Module"
-        description="This module is coming in the next build phase."
+        title="Goals"
+        description="Short-term wins and long-term strategic targets — all tracked with live progress."
       />
-      <div className="flex items-center justify-center h-64 bg-white rounded-2xl border border-dashed border-slate-200">
-        <p className="text-slate-400 text-sm">🚧 Coming soon — module in progress</p>
-      </div>
+      <GoalsClient
+        initialGoals={goals ?? []}
+        allTasks={tasks ?? []}
+        userId={user!.id}
+      />
     </div>
   )
 }

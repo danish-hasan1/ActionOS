@@ -1,15 +1,38 @@
+import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/ui'
+import ReportsClient from '@/components/reports/ReportsClient'
 
-export default function Page() {
+export const dynamic = 'force-dynamic'
+
+export default async function ReportsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [
+    { data: painPoints },
+    { data: goals },
+    { data: tasks },
+    { data: milestones },
+    { data: reports },
+  ] = await Promise.all([
+    supabase.from('pain_points').select('*').eq('owner_id', user!.id),
+    supabase.from('goals').select('*').eq('owner_id', user!.id),
+    supabase.from('tasks').select('*').eq('owner_id', user!.id),
+    supabase.from('milestones').select('*').eq('owner_id', user!.id),
+    supabase.from('reports').select('*').eq('owner_id', user!.id).order('created_at', { ascending: false }),
+  ])
+
   return (
     <div>
-      <PageHeader
-        title="Module"
-        description="This module is coming in the next build phase."
+      <PageHeader title="Reports" description="Generate leadership-ready summaries and share via a secure read-only link." />
+      <ReportsClient
+        painPoints={painPoints ?? []}
+        goals={goals ?? []}
+        tasks={tasks ?? []}
+        milestones={milestones ?? []}
+        initialReports={reports ?? []}
+        userId={user!.id}
       />
-      <div className="flex items-center justify-center h-64 bg-white rounded-2xl border border-dashed border-slate-200">
-        <p className="text-slate-400 text-sm">🚧 Coming soon — module in progress</p>
-      </div>
     </div>
   )
 }

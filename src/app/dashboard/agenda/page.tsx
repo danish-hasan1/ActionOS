@@ -1,15 +1,23 @@
+import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/ui'
+import AgendaClient from '@/components/agenda/AgendaClient'
 
-export default function Page() {
+export const dynamic = 'force-dynamic'
+
+export default async function AgendaPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: agendas } = await supabase
+    .from('agendas')
+    .select('*')
+    .eq('owner_id', user!.id)
+    .order('meeting_date', { ascending: false })
+
   return (
     <div>
-      <PageHeader
-        title="Module"
-        description="This module is coming in the next build phase."
-      />
-      <div className="flex items-center justify-center h-64 bg-white rounded-2xl border border-dashed border-slate-200">
-        <p className="text-slate-400 text-sm">🚧 Coming soon — module in progress</p>
-      </div>
+      <PageHeader title="Agenda" description="Run structured meetings with checklists, action items, and follow-up creation." />
+      <AgendaClient initialAgendas={agendas ?? []} userId={user!.id} />
     </div>
   )
 }
