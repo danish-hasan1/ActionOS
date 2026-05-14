@@ -368,3 +368,35 @@ insert into tags (name, color, category) values
   ('Quality',           '#14B8A6', 'category'),
   ('Speed',             '#EAB308', 'category')
 on conflict (name) do nothing;
+
+
+-- ═══════════════════════════════════════════════════════════════
+-- NO-AUTH MODE: Disable RLS on all tables
+-- Since there is no login, RLS is not needed.
+-- All data is accessed via the anon key with no user session.
+-- ═══════════════════════════════════════════════════════════════
+
+alter table tags          disable row level security;
+alter table goals         disable row level security;
+alter table pain_points   disable row level security;
+alter table tasks         disable row level security;
+alter table milestones    disable row level security;
+alter table agendas       disable row level security;
+alter table followups     disable row level security;
+alter table reports       disable row level security;
+alter table user_settings disable row level security;
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEED OWNER: Insert a fixed owner row so the app works
+-- immediately without needing to create a user.
+-- Use the same UUID as OWNER_ID in your .env.local
+-- ═══════════════════════════════════════════════════════════════
+
+insert into user_settings (owner_id, display_name, role_title, start_date)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  'TA Head',
+  'Head of Talent Acquisition',
+  current_date
+)
+on conflict (owner_id) do nothing;

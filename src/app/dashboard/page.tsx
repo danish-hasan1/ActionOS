@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { OWNER_ID } from '@/lib/owner'
 import { AlertTriangle, CheckSquare, Target, Bell } from 'lucide-react'
 import { StatCard, Card, ProgressBar, Badge } from '@/components/ui'
 import { SEVERITY_CONFIG, PHASE_CONFIG } from '@/lib/utils'
@@ -7,7 +8,6 @@ export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
   const [
     { data: painPoints },
@@ -16,11 +16,11 @@ export default async function DashboardPage() {
     { data: followups },
     { data: settings },
   ] = await Promise.all([
-    supabase.from('pain_points').select('*').eq('owner_id', user!.id),
-    supabase.from('tasks').select('*').eq('owner_id', user!.id),
-    supabase.from('goals').select('*').eq('owner_id', user!.id),
-    supabase.from('followups').select('*').eq('owner_id', user!.id).eq('status', 'pending').order('due_date'),
-    supabase.from('user_settings').select('start_date, display_name, role_title').eq('owner_id', user!.id).single(),
+    supabase.from('pain_points').select('*').eq('owner_id', OWNER_ID),
+    supabase.from('tasks').select('*').eq('owner_id', OWNER_ID),
+    supabase.from('goals').select('*').eq('owner_id', OWNER_ID),
+    supabase.from('followups').select('*').eq('owner_id', OWNER_ID).eq('status', 'pending').order('due_date'),
+    supabase.from('user_settings').select('start_date, display_name, role_title').eq('owner_id', OWNER_ID).single(),
   ])
 
   const pp  = painPoints ?? []
@@ -28,22 +28,19 @@ export default async function DashboardPage() {
   const gl  = goals ?? []
   const fu  = followups ?? []
 
-  const openPP      = pp.filter(p => p.status !== 'resolved')
-  const criticalPP  = pp.filter(p => p.severity === 'critical')
-  const doneTasks   = tsk.filter(t => t.status === 'done').length
-  const totalTasks  = tsk.length
-  const overallPct  = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
-  const avgGoalPct  = gl.length > 0 ? Math.round(gl.reduce((a, g) => a + g.progress_pct, 0) / gl.length) : 0
+  const openPP     = pp.filter(p => p.status !== 'resolved')
+  const criticalPP = pp.filter(p => p.severity === 'critical')
+  const doneTasks  = tsk.filter(t => t.status === 'done').length
+  const totalTasks = tsk.length
+  const overallPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
+  const avgGoalPct = gl.length > 0 ? Math.round(gl.reduce((a, g) => a + g.progress_pct, 0) / gl.length) : 0
 
-  // Phase from real start date
-  const startDate   = settings?.start_date ? new Date(settings.start_date) : new Date()
-  const days        = Math.max(1, Math.floor((Date.now() - startDate.getTime()) / 86400000) + 1)
-  const phase       = days <= 30 ? 1 : days <= 60 ? 2 : 3
-  const phaseKey    = days <= 30 ? '30' : days <= 60 ? '60' : '90'
-  const phaseLabel  = days <= 30 ? 'Learn & Listen' : days <= 60 ? 'Fix & Build' : 'Scale & Optimise'
-
-
-  const greeting    = settings?.display_name ? `Good day, ${settings.display_name.split(' ')[0]} 👋` : 'Good day 👋'
+  const startDate  = settings?.start_date ? new Date(settings.start_date) : new Date()
+  const days       = Math.max(1, Math.floor((Date.now() - startDate.getTime()) / 86400000) + 1)
+  const phase      = days <= 30 ? 1 : days <= 60 ? 2 : 3
+  const phaseKey   = days <= 30 ? '30' : days <= 60 ? '60' : '90'
+  const phaseLabel = days <= 30 ? 'Learn & Listen' : days <= 60 ? 'Fix & Build' : 'Scale & Optimise'
+  const greeting   = settings?.display_name ? `Good day, ${settings.display_name.split(' ')[0]} 👋` : 'Good day 👋'
 
   return (
     <div>
@@ -52,14 +49,11 @@ export default async function DashboardPage() {
         <p className="text-slate-400 text-sm mt-0.5">{settings?.role_title ?? 'Head of Talent Acquisition'} · Your command centre overview.</p>
       </div>
 
-      {/* Phase Banner */}
       <Card className="p-5 mb-6 bg-gradient-to-r from-[#1B3A5C] to-[#2d5a8e] border-0">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-0.5">Phase {phase} of 3</p>
-            <h2 className="text-white font-bold text-lg" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-              {phaseLabel}
-            </h2>
+            <h2 className="text-white font-bold text-lg" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{phaseLabel}</h2>
             <p className="text-white/50 text-xs mt-0.5">
               Day {days} of 90 · {days <= 30 ? 'Stakeholder mapping, process audit, pain point logging' : days <= 60 ? 'Quick wins, process redesign, recruiter enablement' : 'Strategic hiring plan, metrics, tech stack review'}
             </p>
@@ -72,7 +66,6 @@ export default async function DashboardPage() {
         <ProgressBar pct={overallPct} color="#E85D26" height="h-2" />
       </Card>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Open Pain Points" value={openPP.length} sub={`${criticalPP.length} critical`} color="#EF4444" icon={<AlertTriangle className="w-4 h-4" />} />
         <StatCard label="Tasks" value={`${doneTasks}/${totalTasks}`} sub="completed" color="#1B3A5C" icon={<CheckSquare className="w-4 h-4" />} />
@@ -81,11 +74,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Top Pain Points */}
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            Top Open Pain Points
-          </h3>
+          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Top Open Pain Points</h3>
           {openPP.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No open pain points 🎉</p>
           ) : (
@@ -100,18 +90,13 @@ export default async function DashboardPage() {
                   </div>
                 )
               })}
-              {openPP.length > 5 && (
-                <p className="text-xs text-slate-400 pl-5">+{openPP.length - 5} more</p>
-              )}
+              {openPP.length > 5 && <p className="text-xs text-slate-400 pl-5">+{openPP.length - 5} more</p>}
             </div>
           )}
         </Card>
 
-        {/* Goals Progress */}
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            Goal Progress
-          </h3>
+          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Goal Progress</h3>
           {gl.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No goals set yet</p>
           ) : (
@@ -129,11 +114,8 @@ export default async function DashboardPage() {
           )}
         </Card>
 
-        {/* Pending Follow-ups */}
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            Pending Follow-ups
-          </h3>
+          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Pending Follow-ups</h3>
           {fu.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No pending follow-ups ✓</p>
           ) : (
@@ -157,11 +139,8 @@ export default async function DashboardPage() {
           )}
         </Card>
 
-        {/* 30/60/90 Phase breakdown */}
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            30/60/90 Day Progress
-          </h3>
+          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>30/60/90 Day Progress</h3>
           <div className="space-y-4">
             {(['30', '60', '90'] as const).map(ph => {
               const phCfg   = PHASE_CONFIG[ph]
@@ -170,14 +149,12 @@ export default async function DashboardPage() {
               const phPct   = phTasks.length > 0 ? Math.round((phDone / phTasks.length) * 100) : 0
               const isCurrent = phaseKey === ph
               return (
-                <div key={ph} className={`p-3 rounded-xl border ${isCurrent ? 'border-opacity-40' : 'border-slate-100 bg-slate-50'}`}
-                  style={isCurrent ? { borderColor: phCfg.color + '60', backgroundColor: phCfg.color + '08' } : {}}>
+                <div key={ph} className="p-3 rounded-xl border"
+                  style={isCurrent ? { borderColor: phCfg.color + '60', backgroundColor: phCfg.color + '08' } : { borderColor: '#F1F5F9', backgroundColor: '#F8FAFC' }}>
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-slate-700">{phCfg.label}</p>
-                      {isCurrent && (
-                        <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ color: phCfg.color, backgroundColor: phCfg.color + '15' }}>Current</span>
-                      )}
+                      {isCurrent && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ color: phCfg.color, backgroundColor: phCfg.color + '15' }}>Current</span>}
                     </div>
                     <span className="text-xs font-bold" style={{ color: phCfg.color }}>{phPct}%</span>
                   </div>

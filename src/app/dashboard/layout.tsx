@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { OWNER_ID } from '@/lib/owner'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import MobileSidebar from '@/components/layout/MobileSidebar'
@@ -7,18 +7,15 @@ import QuickAdd from '@/components/ui/QuickAdd'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
   const { data: settings } = await supabase
     .from('user_settings')
     .select('start_date, display_name')
-    .eq('owner_id', user.id)
+    .eq('owner_id', OWNER_ID)
     .single()
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8F9FC]">
-      {/* Desktop sidebar */}
       <div className="hidden md:block">
         <Sidebar startDate={settings?.start_date} />
       </div>
@@ -30,10 +27,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <span className="text-sm font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>ActionPlan OS</span>
           </div>
           <div className="hidden md:block w-full">
-            <TopBar user={user} displayName={settings?.display_name} />
+            <TopBar displayName={settings?.display_name} />
           </div>
           <div className="md:hidden">
-            <TopBar user={user} displayName={settings?.display_name} mobileOnly />
+            <TopBar displayName={settings?.display_name} mobileOnly />
           </div>
         </header>
 
@@ -42,8 +39,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </main>
       </div>
 
-      {/* Global Quick Add FAB */}
-      <QuickAdd userId={user.id} />
+      <QuickAdd userId={OWNER_ID} />
     </div>
   )
 }
