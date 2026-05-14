@@ -19,7 +19,7 @@ function GoalModal({ open, onClose, userId, editing, onSaved }: {
   onClose: () => void
   userId: string
   editing?: Goal | null
-  onSaved: (g: Goal) => void
+  onSaved: (_: Goal) => void
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -134,9 +134,9 @@ function GoalModal({ open, onClose, userId, editing, onSaved }: {
 function GoalCard({ goal, linkedTasks, onEdit, onDelete, onProgressUpdate }: {
   goal: Goal
   linkedTasks: LinkedTask[]
-  onEdit: (g: Goal) => void
-  onDelete: (id: string) => void
-  onProgressUpdate: (id: string, pct: number) => void
+  onEdit: (_g: Goal) => void
+  onDelete: (_id: string) => void
+  onProgressUpdate?: (_id: string, _pct: number) => void
 }) {
   const stat = GOAL_STATUS_CONFIG[goal.status]
   const isShort = goal.type === 'short_term'
@@ -260,10 +260,6 @@ export default function GoalsClient({ initialGoals, allTasks, userId }: {
     else { setGoals(prev => prev.filter(g => g.id !== id)); toast.success('Goal deleted') }
   }
 
-  async function handleProgressUpdate(id: string, pct: number) {
-    const { data, error } = await supabase.from('goals').update({ progress_pct: pct }).eq('id', id).select().single()
-    if (!error) setGoals(prev => prev.map(g => g.id === id ? data as Goal : g))
-  }
 
   return (
     <>
@@ -342,7 +338,6 @@ export default function GoalsClient({ initialGoals, allTasks, userId }: {
               linkedTasks={tasks.filter(t => t.goal_id === g.id)}
               onEdit={openEdit}
               onDelete={handleDelete}
-              onProgressUpdate={handleProgressUpdate}
             />
           ))}
         </div>

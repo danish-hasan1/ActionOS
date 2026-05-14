@@ -1,12 +1,17 @@
 -- ============================================================
--- ActionPlan OS — Supabase Schema  (v2 — fixed)
--- Run this entire file in your Supabase SQL Editor
+-- ActionPlan OS — Supabase Schema  (FINAL — idempotent)
+-- Safe to run on a fresh DB or re-run on an existing one.
+-- Run this entire file in your Supabase SQL Editor.
 -- ============================================================
 
--- Enable UUID extension
+-- ─── Extensions ──────────────────────────────────────────────
 create extension if not exists "uuid-ossp";
 
--- ─── 1. TAGS ─────────────────────────────────────────────────
+-- ═══════════════════════════════════════════════════════════════
+-- TABLES
+-- Order matters: goals before tasks (FK dependency)
+-- ═══════════════════════════════════════════════════════════════
+
 create table if not exists tags (
   id         uuid primary key default uuid_generate_v4(),
   name       text not null unique,
@@ -16,7 +21,6 @@ create table if not exists tags (
   created_at timestamptz default now()
 );
 
--- ─── 2. GOALS (must come BEFORE tasks due to FK) ─────────────
 create table if not exists goals (
   id           uuid primary key default uuid_generate_v4(),
   title        text not null,
@@ -34,7 +38,6 @@ create table if not exists goals (
   updated_at   timestamptz default now()
 );
 
--- ─── 3. PAIN POINTS ──────────────────────────────────────────
 create table if not exists pain_points (
   id          uuid primary key default uuid_generate_v4(),
   title       text not null,
@@ -51,7 +54,6 @@ create table if not exists pain_points (
   updated_at  timestamptz default now()
 );
 
--- ─── 4. TASKS (references both goals and pain_points) ────────
 create table if not exists tasks (
   id             uuid primary key default uuid_generate_v4(),
   title          text not null,
@@ -69,7 +71,6 @@ create table if not exists tasks (
   updated_at     timestamptz default now()
 );
 
--- ─── 5. MILESTONES ───────────────────────────────────────────
 create table if not exists milestones (
   id         uuid primary key default uuid_generate_v4(),
   title      text not null,
@@ -85,7 +86,6 @@ create table if not exists milestones (
   updated_at timestamptz default now()
 );
 
--- ─── 6. AGENDAS ──────────────────────────────────────────────
 create table if not exists agendas (
   id           uuid primary key default uuid_generate_v4(),
   title        text not null,
@@ -99,7 +99,6 @@ create table if not exists agendas (
   updated_at   timestamptz default now()
 );
 
--- ─── 7. FOLLOW-UPS ───────────────────────────────────────────
 create table if not exists followups (
   id            uuid primary key default uuid_generate_v4(),
   title         text not null,
@@ -117,7 +116,6 @@ create table if not exists followups (
   updated_at    timestamptz default now()
 );
 
--- ─── 8. REPORTS ──────────────────────────────────────────────
 create table if not exists reports (
   id               uuid primary key default uuid_generate_v4(),
   title            text not null,
@@ -127,25 +125,22 @@ create table if not exists reports (
   report_data      jsonb default '{}'::jsonb,
   owner_id         uuid references auth.users(id) on delete cascade,
   created_at       timestamptz default now()
-  -- no updated_at: reports are immutable snapshots
 );
 
--- ─── 9. USER SETTINGS ────────────────────────────────────────
--- Stores per-user preferences: start date, display name, etc.
 create table if not exists user_settings (
-  id                uuid primary key default uuid_generate_v4(),
-  owner_id          uuid references auth.users(id) on delete cascade unique,
-  display_name      text,
-  company_name      text,
-  role_title        text default 'Head of Talent Acquisition',
-  start_date        date default current_date,
+  id                 uuid primary key default uuid_generate_v4(),
+  owner_id           uuid references auth.users(id) on delete cascade unique,
+  display_name       text,
+  company_name       text,
+  role_title         text default 'Head of Talent Acquisition',
+  start_date         date default current_date,
   notification_email text,
-  created_at        timestamptz default now(),
-  updated_at        timestamptz default now()
+  created_at         timestamptz default now(),
+  updated_at         timestamptz default now()
 );
 
 -- ═══════════════════════════════════════════════════════════════
--- ROW LEVEL SECURITY
+-- ROW LEVEL SECURITY — enable (idempotent)
 -- ═══════════════════════════════════════════════════════════════
 
 alter table tags          enable row level security;
@@ -158,104 +153,114 @@ alter table followups     enable row level security;
 alter table reports       enable row level security;
 alter table user_settings enable row level security;
 
--- ── Tags: any authenticated user can read; any authenticated user can write
---    (tags are shared/global for a single-user app)
-create policy "tags_select" on tags
-  for select using (auth.role() = 'authenticated');
-create policy "tags_insert" on tags
-  for insert with check (auth.role() = 'authenticated');
-create policy "tags_update" on tags
-  for update using (auth.role() = 'authenticated');
-create policy "tags_delete" on tags
-  for delete using (auth.role() = 'authenticated');
-
--- ── Goals: owner only (SELECT + INSERT + UPDATE + DELETE)
-create policy "goals_select" on goals
-  for select using (owner_id = auth.uid());
-create policy "goals_insert" on goals
-  for insert with check (owner_id = auth.uid());
-create policy "goals_update" on goals
-  for update using (owner_id = auth.uid());
-create policy "goals_delete" on goals
-  for delete using (owner_id = auth.uid());
-
--- ── Pain Points: owner only
-create policy "pain_points_select" on pain_points
-  for select using (owner_id = auth.uid());
-create policy "pain_points_insert" on pain_points
-  for insert with check (owner_id = auth.uid());
-create policy "pain_points_update" on pain_points
-  for update using (owner_id = auth.uid());
-create policy "pain_points_delete" on pain_points
-  for delete using (owner_id = auth.uid());
-
--- ── Tasks: owner only
-create policy "tasks_select" on tasks
-  for select using (owner_id = auth.uid());
-create policy "tasks_insert" on tasks
-  for insert with check (owner_id = auth.uid());
-create policy "tasks_update" on tasks
-  for update using (owner_id = auth.uid());
-create policy "tasks_delete" on tasks
-  for delete using (owner_id = auth.uid());
-
--- ── Milestones: owner only
-create policy "milestones_select" on milestones
-  for select using (owner_id = auth.uid());
-create policy "milestones_insert" on milestones
-  for insert with check (owner_id = auth.uid());
-create policy "milestones_update" on milestones
-  for update using (owner_id = auth.uid());
-create policy "milestones_delete" on milestones
-  for delete using (owner_id = auth.uid());
-
--- ── Agendas: owner only
-create policy "agendas_select" on agendas
-  for select using (owner_id = auth.uid());
-create policy "agendas_insert" on agendas
-  for insert with check (owner_id = auth.uid());
-create policy "agendas_update" on agendas
-  for update using (owner_id = auth.uid());
-create policy "agendas_delete" on agendas
-  for delete using (owner_id = auth.uid());
-
--- ── Follow-ups: owner only
-create policy "followups_select" on followups
-  for select using (owner_id = auth.uid());
-create policy "followups_insert" on followups
-  for insert with check (owner_id = auth.uid());
-create policy "followups_update" on followups
-  for update using (owner_id = auth.uid());
-create policy "followups_delete" on followups
-  for delete using (owner_id = auth.uid());
-
--- ── Reports: owner can do everything; public can SELECT only via share_token
---    NOTE: the share page uses a Supabase server client — anon can only
---    read a report if they know the exact share_token UUID (256-bit).
-create policy "reports_owner_select" on reports
-  for select using (owner_id = auth.uid());
-create policy "reports_insert" on reports
-  for insert with check (owner_id = auth.uid());
-create policy "reports_update" on reports
-  for update using (owner_id = auth.uid());
-create policy "reports_delete" on reports
-  for delete using (owner_id = auth.uid());
--- Public read via token — safe because share_token is a UUID (unguessable)
-create policy "reports_public_by_token" on reports
-  for select using (share_token is not null);
-
--- ── User settings: owner only
-create policy "user_settings_select" on user_settings
-  for select using (owner_id = auth.uid());
-create policy "user_settings_insert" on user_settings
-  for insert with check (owner_id = auth.uid());
-create policy "user_settings_update" on user_settings
-  for update using (owner_id = auth.uid());
-
 -- ═══════════════════════════════════════════════════════════════
--- UPDATED_AT TRIGGER
+-- POLICIES — drop then recreate so re-runs never fail
 -- ═══════════════════════════════════════════════════════════════
 
+-- tags
+drop policy if exists "tags_select"  on tags;
+drop policy if exists "tags_insert"  on tags;
+drop policy if exists "tags_update"  on tags;
+drop policy if exists "tags_delete"  on tags;
+create policy "tags_select" on tags for select using (auth.role() = 'authenticated');
+create policy "tags_insert" on tags for insert with check (auth.role() = 'authenticated');
+create policy "tags_update" on tags for update using (auth.role() = 'authenticated');
+create policy "tags_delete" on tags for delete using (auth.role() = 'authenticated');
+
+-- goals
+drop policy if exists "goals_select" on goals;
+drop policy if exists "goals_insert" on goals;
+drop policy if exists "goals_update" on goals;
+drop policy if exists "goals_delete" on goals;
+drop policy if exists "goals_all"    on goals;
+create policy "goals_select" on goals for select using (owner_id = auth.uid());
+create policy "goals_insert" on goals for insert with check (owner_id = auth.uid());
+create policy "goals_update" on goals for update using (owner_id = auth.uid());
+create policy "goals_delete" on goals for delete using (owner_id = auth.uid());
+
+-- pain_points
+drop policy if exists "pain_points_select" on pain_points;
+drop policy if exists "pain_points_insert" on pain_points;
+drop policy if exists "pain_points_update" on pain_points;
+drop policy if exists "pain_points_delete" on pain_points;
+drop policy if exists "pain_points_all"    on pain_points;
+create policy "pain_points_select" on pain_points for select using (owner_id = auth.uid());
+create policy "pain_points_insert" on pain_points for insert with check (owner_id = auth.uid());
+create policy "pain_points_update" on pain_points for update using (owner_id = auth.uid());
+create policy "pain_points_delete" on pain_points for delete using (owner_id = auth.uid());
+
+-- tasks
+drop policy if exists "tasks_select" on tasks;
+drop policy if exists "tasks_insert" on tasks;
+drop policy if exists "tasks_update" on tasks;
+drop policy if exists "tasks_delete" on tasks;
+drop policy if exists "tasks_all"    on tasks;
+create policy "tasks_select" on tasks for select using (owner_id = auth.uid());
+create policy "tasks_insert" on tasks for insert with check (owner_id = auth.uid());
+create policy "tasks_update" on tasks for update using (owner_id = auth.uid());
+create policy "tasks_delete" on tasks for delete using (owner_id = auth.uid());
+
+-- milestones
+drop policy if exists "milestones_select" on milestones;
+drop policy if exists "milestones_insert" on milestones;
+drop policy if exists "milestones_update" on milestones;
+drop policy if exists "milestones_delete" on milestones;
+drop policy if exists "milestones_all"    on milestones;
+create policy "milestones_select" on milestones for select using (owner_id = auth.uid());
+create policy "milestones_insert" on milestones for insert with check (owner_id = auth.uid());
+create policy "milestones_update" on milestones for update using (owner_id = auth.uid());
+create policy "milestones_delete" on milestones for delete using (owner_id = auth.uid());
+
+-- agendas
+drop policy if exists "agendas_select" on agendas;
+drop policy if exists "agendas_insert" on agendas;
+drop policy if exists "agendas_update" on agendas;
+drop policy if exists "agendas_delete" on agendas;
+drop policy if exists "agendas_all"    on agendas;
+create policy "agendas_select" on agendas for select using (owner_id = auth.uid());
+create policy "agendas_insert" on agendas for insert with check (owner_id = auth.uid());
+create policy "agendas_update" on agendas for update using (owner_id = auth.uid());
+create policy "agendas_delete" on agendas for delete using (owner_id = auth.uid());
+
+-- followups
+drop policy if exists "followups_select" on followups;
+drop policy if exists "followups_insert" on followups;
+drop policy if exists "followups_update" on followups;
+drop policy if exists "followups_delete" on followups;
+drop policy if exists "followups_all"    on followups;
+create policy "followups_select" on followups for select using (owner_id = auth.uid());
+create policy "followups_insert" on followups for insert with check (owner_id = auth.uid());
+create policy "followups_update" on followups for update using (owner_id = auth.uid());
+create policy "followups_delete" on followups for delete using (owner_id = auth.uid());
+
+-- reports (owner + public token read)
+drop policy if exists "reports_owner_select"   on reports;
+drop policy if exists "reports_insert"         on reports;
+drop policy if exists "reports_update"         on reports;
+drop policy if exists "reports_delete"         on reports;
+drop policy if exists "reports_all"            on reports;
+drop policy if exists "reports_public_read"    on reports;
+drop policy if exists "reports_public_by_token" on reports;
+create policy "reports_owner_select"    on reports for select using (owner_id = auth.uid());
+create policy "reports_insert"          on reports for insert with check (owner_id = auth.uid());
+create policy "reports_update"          on reports for update using (owner_id = auth.uid());
+create policy "reports_delete"          on reports for delete using (owner_id = auth.uid());
+-- Anyone with the unguessable share_token UUID can read the report (no auth needed)
+create policy "reports_public_by_token" on reports for select using (share_token is not null);
+
+-- user_settings
+drop policy if exists "user_settings_select" on user_settings;
+drop policy if exists "user_settings_insert" on user_settings;
+drop policy if exists "user_settings_update" on user_settings;
+create policy "user_settings_select" on user_settings for select using (owner_id = auth.uid());
+create policy "user_settings_insert" on user_settings for insert with check (owner_id = auth.uid());
+create policy "user_settings_update" on user_settings for update using (owner_id = auth.uid());
+
+-- ═══════════════════════════════════════════════════════════════
+-- FUNCTIONS & TRIGGERS (all use create or replace / drop if exists)
+-- ═══════════════════════════════════════════════════════════════
+
+-- updated_at helper
 create or replace function update_updated_at()
 returns trigger as $$
 begin
@@ -264,57 +269,24 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger goals_updated_at
-  before update on goals
-  for each row execute function update_updated_at();
+-- updated_at triggers (drop first so re-runs are safe)
+drop trigger if exists goals_updated_at         on goals;
+drop trigger if exists pain_points_updated_at   on pain_points;
+drop trigger if exists tasks_updated_at         on tasks;
+drop trigger if exists milestones_updated_at    on milestones;
+drop trigger if exists agendas_updated_at       on agendas;
+drop trigger if exists followups_updated_at     on followups;
+drop trigger if exists user_settings_updated_at on user_settings;
 
-create trigger pain_points_updated_at
-  before update on pain_points
-  for each row execute function update_updated_at();
+create trigger goals_updated_at         before update on goals         for each row execute function update_updated_at();
+create trigger pain_points_updated_at   before update on pain_points   for each row execute function update_updated_at();
+create trigger tasks_updated_at         before update on tasks         for each row execute function update_updated_at();
+create trigger milestones_updated_at    before update on milestones    for each row execute function update_updated_at();
+create trigger agendas_updated_at       before update on agendas       for each row execute function update_updated_at();
+create trigger followups_updated_at     before update on followups     for each row execute function update_updated_at();
+create trigger user_settings_updated_at before update on user_settings for each row execute function update_updated_at();
 
-create trigger tasks_updated_at
-  before update on tasks
-  for each row execute function update_updated_at();
-
-create trigger milestones_updated_at
-  before update on milestones
-  for each row execute function update_updated_at();
-
-create trigger agendas_updated_at
-  before update on agendas
-  for each row execute function update_updated_at();
-
-create trigger followups_updated_at
-  before update on followups
-  for each row execute function update_updated_at();
-
-create trigger user_settings_updated_at
-  before update on user_settings
-  for each row execute function update_updated_at();
-
--- ═══════════════════════════════════════════════════════════════
--- SEED DEFAULT TAGS
--- ═══════════════════════════════════════════════════════════════
-
-insert into tags (name, color, category) values
-  ('Recruiter',          '#6366F1', 'owner'),
-  ('Account Manager',    '#F59E0B', 'owner'),
-  ('Leadership',         '#EF4444', 'owner'),
-  ('Hiring Manager',     '#8B5CF6', 'owner'),
-  ('HR / Ops',           '#EC4899', 'owner'),
-  ('External / Vendor',  '#64748B', 'owner'),
-  ('Process',            '#10B981', 'category'),
-  ('Technology',         '#3B82F6', 'category'),
-  ('Communication',      '#F97316', 'category'),
-  ('Quality',            '#14B8A6', 'category'),
-  ('Speed',              '#EAB308', 'category')
-on conflict (name) do nothing;
-
-
--- ═══════════════════════════════════════════════════════════════
--- AUTO-PROGRESS: Update goal progress_pct when tasks change
--- ═══════════════════════════════════════════════════════════════
-
+-- Auto-sync goal progress_pct when linked tasks change status
 create or replace function sync_goal_progress()
 returns trigger as $$
 declare
@@ -323,47 +295,49 @@ declare
   v_done    int;
   v_pct     int;
 begin
-  -- Determine which goal_id to update
-  v_goal_id := coalesce(new.goal_id, old.goal_id);
+  v_goal_id := coalesce(
+    case when TG_OP = 'DELETE' then old.goal_id else new.goal_id end,
+    case when TG_OP = 'DELETE' then null else old.goal_id end
+  );
   if v_goal_id is null then
     return coalesce(new, old);
   end if;
 
-  -- Count tasks linked to this goal
-  select count(*), count(*) filter (where status = 'done')
-  into v_total, v_done
-  from tasks
-  where goal_id = v_goal_id;
+  select
+    count(*)                                    into v_total
+  from tasks where goal_id = v_goal_id;
 
-  -- Calculate percentage (0 if no tasks)
-  v_pct := case when v_total > 0 then round((v_done::numeric / v_total) * 100) else 0 end;
+  select
+    count(*) filter (where status = 'done')     into v_done
+  from tasks where goal_id = v_goal_id;
 
-  -- Update the goal
+  v_pct := case when v_total > 0
+    then round((v_done::numeric / v_total) * 100)
+    else 0
+  end;
+
   update goals
-  set progress_pct = v_pct,
-      status = case
-        when v_pct = 100 then 'complete'
-        when v_pct > 0   then 'in_progress'
-        else status  -- don't downgrade manually set statuses
-      end,
-      updated_at = now()
+  set
+    progress_pct = v_pct,
+    status = case
+      when v_pct = 100 then 'complete'
+      when v_pct > 0   then 'in_progress'
+      else status
+    end,
+    updated_at = now()
   where id = v_goal_id;
 
   return coalesce(new, old);
 end;
 $$ language plpgsql security definer;
 
--- Trigger fires on any task insert, update, or delete
+drop trigger if exists tasks_sync_goal_progress on tasks;
 create trigger tasks_sync_goal_progress
   after insert or update of status, goal_id or delete
   on tasks
   for each row execute function sync_goal_progress();
 
-
--- ═══════════════════════════════════════════════════════════════
--- AUTO-OVERDUE: Mark followups as overdue when due_date passes
--- ═══════════════════════════════════════════════════════════════
-
+-- Auto-mark followups overdue (called on page load; schedulable via pg_cron on Pro)
 create or replace function mark_overdue_followups()
 returns void as $$
 begin
@@ -374,7 +348,23 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Call this manually or via a pg_cron job (Supabase Pro):
+-- To schedule on Supabase Pro (uncomment):
 -- select cron.schedule('mark-overdue', '0 6 * * *', 'select mark_overdue_followups()');
--- For free tier, the client calls this on page load (see FollowupsClient).
 
+-- ═══════════════════════════════════════════════════════════════
+-- SEED DEFAULT TAGS (safe to re-run — conflicts ignored)
+-- ═══════════════════════════════════════════════════════════════
+
+insert into tags (name, color, category) values
+  ('Recruiter',         '#6366F1', 'owner'),
+  ('Account Manager',   '#F59E0B', 'owner'),
+  ('Leadership',        '#EF4444', 'owner'),
+  ('Hiring Manager',    '#8B5CF6', 'owner'),
+  ('HR / Ops',          '#EC4899', 'owner'),
+  ('External / Vendor', '#64748B', 'owner'),
+  ('Process',           '#10B981', 'category'),
+  ('Technology',        '#3B82F6', 'category'),
+  ('Communication',     '#F97316', 'category'),
+  ('Quality',           '#14B8A6', 'category'),
+  ('Speed',             '#EAB308', 'category')
+on conflict (name) do nothing;

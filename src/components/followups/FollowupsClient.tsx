@@ -7,7 +7,7 @@ import { Plus, Bell, CheckCircle2, Clock, AlertCircle, Pencil, Trash2, Calendar,
 import type { Followup, FollowupStatus, Priority } from '@/types'
 import {
   Badge, EmptyState, Button, Modal, FormField,
-  inputCls, selectCls, textareaCls, Card, StatCard
+  inputCls, selectCls, textareaCls, StatCard
 } from '@/components/ui'
 import { PRIORITY_CONFIG, formatDate, cn } from '@/lib/utils'
 
@@ -19,7 +19,7 @@ function FollowupModal({ open, onClose, userId, editing, agendas, tasks, onSaved
   editing?: Followup | null
   agendas: { id: string; title: string }[]
   tasks: { id: string; title: string }[]
-  onSaved: (f: Followup) => void
+  onSaved: (_: Followup) => void
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -118,9 +118,9 @@ function FollowupModal({ open, onClose, userId, editing, agendas, tasks, onSaved
 // ─── Followup Row ─────────────────────────────────────────────
 function FollowupRow({ f, onEdit, onDelete, onMarkDone }: {
   f: Followup
-  onEdit: (f: Followup) => void
-  onDelete: (id: string) => void
-  onMarkDone: (id: string) => void
+  onEdit: (_f: Followup) => void
+  onDelete: (_id: string) => void
+  onMarkDone: (_id: string) => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const pri = PRIORITY_CONFIG[f.priority]
@@ -203,15 +203,17 @@ export default function FollowupsClient({ initialFollowups, agendas, tasks, user
   const done = followups.filter(f => f.status === 'done')
 
   const filtered = useMemo(() => {
+    const now = new Date()
+    const overdueList = followups.filter(f => f.due_date && new Date(f.due_date) < now && f.status === 'pending')
     let list = [...followups]
     if (filterStatus !== 'all') {
-      if (filterStatus === 'overdue') list = overdue
+      if (filterStatus === 'overdue') list = overdueList
       else list = list.filter(f => f.status === filterStatus)
     }
     // Sort: overdue first, then by due_date asc, then no date
     return list.sort((a, b) => {
-      const aOver = a.due_date && new Date(a.due_date) < today && a.status === 'pending'
-      const bOver = b.due_date && new Date(b.due_date) < today && b.status === 'pending'
+      const aOver = a.due_date && new Date(a.due_date) < now && a.status === 'pending'
+      const bOver = b.due_date && new Date(b.due_date) < now && b.status === 'pending'
       if (aOver && !bOver) return -1
       if (!aOver && bOver) return 1
       if (a.due_date && b.due_date) return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()

@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/ui'
 import PainPointsClient from '@/components/pain-points/PainPointsClient'
-import { AlertTriangle } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Plus, Search, Filter, AlertTriangle, ChevronDown, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
+import { Plus, Search, AlertTriangle, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
 import type { PainPoint, Tag, Severity, PainPointStatus, Phase } from '@/types'
 import {
   Badge, TagBadge, EmptyState, Button, Modal, FormField,
@@ -20,7 +20,7 @@ function PainPointModal({
   tags: Tag[]
   userId: string
   editing?: PainPoint | null
-  onSaved: (pp: PainPoint) => void
+  onSaved: (_: PainPoint) => void
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -172,8 +172,8 @@ function PainPointCard({
 }: {
   pp: PainPoint
   tags: Tag[]
-  onEdit: (pp: PainPoint) => void
-  onDelete: (id: string) => void
+  onEdit: (_pp: PainPoint) => void
+  onDelete: (_id: string) => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const sev = SEVERITY_CONFIG[pp.severity]

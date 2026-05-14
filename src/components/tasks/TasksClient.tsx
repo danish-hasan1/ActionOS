@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Plus, Search, CheckSquare, LayoutGrid, List, Pencil, Trash2, Calendar, MoreHorizontal, GripVertical } from 'lucide-react'
+import { Plus, Search, CheckSquare, LayoutGrid, List, Pencil, Trash2, Calendar, MoreHorizontal } from 'lucide-react'
 import type { Task, TaskStatus, Priority, Phase } from '@/types'
 import {
   Badge, EmptyState, Button, Modal, FormField,
@@ -23,7 +23,7 @@ function TaskModal({
   editing?: Task | null
   painPoints: { id: string; title: string }[]
   goals: { id: string; title: string }[]
-  onSaved: (t: Task) => void
+  onSaved: (_: Task) => void
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -143,13 +143,12 @@ function TaskModal({
 // ─── Task Card (shared between list + kanban) ─────────────────
 function TaskCard({ task, onEdit, onDelete, onStatusChange, compact = false }: {
   task: Task
-  onEdit: (t: Task) => void
+  onEdit: (_t: Task) => void
   onDelete: (id: string) => void
-  onStatusChange: (id: string, status: TaskStatus) => void
+  onStatusChange: (_id: string, _s: TaskStatus) => void
   compact?: boolean
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const stat = TASK_STATUS_CONFIG[task.status]
   const pri = PRIORITY_CONFIG[task.priority]
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done'
 
@@ -246,7 +245,7 @@ const KANBAN_COLS: { status: TaskStatus; label: string; color: string; bg: strin
 
 function KanbanView({ tasks, onEdit, onDelete, onStatusChange, onAdd }: {
   tasks: Task[]
-  onEdit: (t: Task) => void
+  onEdit: (_t: Task) => void
   onDelete: (id: string) => void
   onStatusChange: (id: string, s: TaskStatus) => void
   onAdd: () => void

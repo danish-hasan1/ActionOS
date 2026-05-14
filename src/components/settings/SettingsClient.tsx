@@ -90,7 +90,7 @@ function TagRow({ tag, onDelete, onUpdate }: {
 }
 
 // ─── Add Tag Form ─────────────────────────────────────────────
-function AddTagForm({ onAdd }: { onAdd: (name: string, color: string, category: 'owner' | 'category') => void }) {
+function AddTagForm({ onAdd }: { onAdd: (_name: string, _color: string, _cat: 'owner' | 'category') => void }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [color, setColor] = useState('#6366F1')
@@ -318,7 +318,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId, u
                 <p className="text-sm text-slate-400 text-center py-3">No owner tags yet</p>
               )}
             </div>
-            <AddTagForm onAdd={(n, c, _) => handleAddTag(n, c, 'owner')} />
+            <AddTagForm onAdd={(n, c) => handleAddTag(n, c, 'owner')} />
           </Card>
 
           {/* Category tags */}
@@ -335,7 +335,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId, u
                 <p className="text-sm text-slate-400 text-center py-3">No category tags yet</p>
               )}
             </div>
-            <AddTagForm onAdd={(n, c, _) => handleAddTag(n, c, 'category')} />
+            <AddTagForm onAdd={(n, c) => handleAddTag(n, c, 'category')} />
           </Card>
 
           <p className="text-xs text-slate-400 px-1">

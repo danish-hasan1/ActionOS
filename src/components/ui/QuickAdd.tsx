@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { Plus, X, CheckSquare, AlertTriangle } from 'lucide-react'
-import { Modal, FormField, Button, inputCls, selectCls, textareaCls } from '@/components/ui'
+import { Modal, FormField, Button, inputCls, selectCls } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 type QuickType = 'task' | 'pain_point'

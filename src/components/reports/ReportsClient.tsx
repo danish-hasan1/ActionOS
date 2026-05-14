@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { FileText, Plus, Share2, Trash2, ExternalLink, Copy, CheckCircle2, TrendingUp, AlertTriangle, Target, Map } from 'lucide-react'
+import { FileText, Plus, Trash2, Copy, CheckCircle2, AlertTriangle, Target, Map } from 'lucide-react'
 import type { PainPoint, Goal, Task, Milestone, Report } from '@/types'
-import { Badge, Button, Card, EmptyState, ProgressBar, StatCard } from '@/components/ui'
-import { SEVERITY_CONFIG, GOAL_STATUS_CONFIG, PHASE_CONFIG, formatDate, cn } from '@/lib/utils'
+import { Button, Card, ProgressBar, Badge } from '@/components/ui'
+import { SEVERITY_CONFIG, PHASE_CONFIG, cn } from '@/lib/utils'
 
 // ─── Report Preview ───────────────────────────────────────────
 function ReportPreview({ data }: { data: Record<string, unknown> }) {

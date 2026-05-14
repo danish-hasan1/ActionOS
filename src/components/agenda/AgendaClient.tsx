@@ -19,7 +19,7 @@ function AgendaModal({ open, onClose, userId, editing, onSaved }: {
   onClose: () => void
   userId: string
   editing?: Agenda | null
-  onSaved: (a: Agenda) => void
+  onSaved: (_: Agenda) => void
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -138,9 +138,9 @@ function AgendaModal({ open, onClose, userId, editing, onSaved }: {
 // ─── Agenda Card with Live Checklist Runner ───────────────────
 function AgendaCard({ agenda, onEdit, onDelete, onItemToggle }: {
   agenda: Agenda
-  onEdit: (a: Agenda) => void
-  onDelete: (id: string) => void
-  onItemToggle: (agendaId: string, itemId: string, checked: boolean) => void
+  onEdit: (_a: Agenda) => void
+  onDelete: (_id: string) => void
+  onItemToggle: (_agendaId: string, _itemId: string, _checked: boolean) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const checkedCount = agenda.items.filter(i => i.checked).length

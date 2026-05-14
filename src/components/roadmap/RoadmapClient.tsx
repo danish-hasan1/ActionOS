@@ -123,9 +123,9 @@ function MilestoneModal({ open, onClose, userId, editing, goals, onSaved }: {
 // ─── Milestone Row ────────────────────────────────────────────
 function MilestoneRow({ m, onEdit, onDelete, onStatusCycle }: {
   m: Milestone
-  onEdit: (m: Milestone) => void
-  onDelete: (id: string) => void
-  onStatusCycle: (m: Milestone) => void
+  onEdit: (_m: Milestone) => void
+  onDelete: (_id: string) => void
+  onStatusCycle: (_m: Milestone) => void
 }) {
   const cfg = STATUS_CONFIG[m.status]
   return (

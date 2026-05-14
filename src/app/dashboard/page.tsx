@@ -41,7 +41,7 @@ export default async function DashboardPage() {
   const phase       = days <= 30 ? 1 : days <= 60 ? 2 : 3
   const phaseKey    = days <= 30 ? '30' : days <= 60 ? '60' : '90'
   const phaseLabel  = days <= 30 ? 'Learn & Listen' : days <= 60 ? 'Fix & Build' : 'Scale & Optimise'
-  const phaseColor  = days <= 30 ? '#7C3AED' : days <= 60 ? '#E85D26' : '#2E9E6B'
+
 
   const greeting    = settings?.display_name ? `Good day, ${settings.display_name.split(' ')[0]} 👋` : 'Good day 👋'
 

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ProgressBar, Badge } from '@/components/ui'
-import { SEVERITY_CONFIG, PHASE_CONFIG, formatDate, cn } from '@/lib/utils'
+import { SEVERITY_CONFIG, PHASE_CONFIG, cn } from '@/lib/utils'
 import { CheckCircle2, AlertTriangle, Target, Map } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
