@@ -371,20 +371,31 @@ on conflict (name) do nothing;
 
 
 -- ═══════════════════════════════════════════════════════════════
--- NO-AUTH MODE: Disable RLS on all tables
--- Since there is no login, RLS is not needed.
--- All data is accessed via the anon key with no user session.
+-- NO-AUTH MODE: Grant anon role full access via RLS policies
+-- The app uses the public anon key with no user session.
+-- RLS stays ENABLED; these policies allow the anon role to do
+-- all CRUD so saves work without auth.uid() being set.
 -- ═══════════════════════════════════════════════════════════════
 
-alter table tags          disable row level security;
-alter table goals         disable row level security;
-alter table pain_points   disable row level security;
-alter table tasks         disable row level security;
-alter table milestones    disable row level security;
-alter table agendas       disable row level security;
-alter table followups     disable row level security;
-alter table reports       disable row level security;
-alter table user_settings disable row level security;
+drop policy if exists "anon_all_tags"          on tags;
+drop policy if exists "anon_all_goals"         on goals;
+drop policy if exists "anon_all_pain_points"   on pain_points;
+drop policy if exists "anon_all_tasks"         on tasks;
+drop policy if exists "anon_all_milestones"    on milestones;
+drop policy if exists "anon_all_agendas"       on agendas;
+drop policy if exists "anon_all_followups"     on followups;
+drop policy if exists "anon_all_reports"       on reports;
+drop policy if exists "anon_all_user_settings" on user_settings;
+
+create policy "anon_all_tags"          on tags          for all to anon using (true) with check (true);
+create policy "anon_all_goals"         on goals         for all to anon using (true) with check (true);
+create policy "anon_all_pain_points"   on pain_points   for all to anon using (true) with check (true);
+create policy "anon_all_tasks"         on tasks         for all to anon using (true) with check (true);
+create policy "anon_all_milestones"    on milestones    for all to anon using (true) with check (true);
+create policy "anon_all_agendas"       on agendas       for all to anon using (true) with check (true);
+create policy "anon_all_followups"     on followups     for all to anon using (true) with check (true);
+create policy "anon_all_reports"       on reports       for all to anon using (true) with check (true);
+create policy "anon_all_user_settings" on user_settings for all to anon using (true) with check (true);
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED OWNER: Insert a fixed owner row so the app works
