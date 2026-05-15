@@ -33,7 +33,7 @@ create table if not exists goals (
                  check (progress_pct >= 0 and progress_pct <= 100),
   status       text not null default 'not_started'
                  check (status in ('not_started','in_progress','at_risk','complete')),
-  owner_id     uuid references auth.users(id) on delete cascade,
+  owner_id     uuid,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
 );
@@ -49,7 +49,7 @@ create table if not exists pain_points (
   phase       text check (phase in ('30','60','90')),
   tag_ids     uuid[] default '{}',
   notes       text,
-  owner_id    uuid references auth.users(id) on delete cascade,
+  owner_id    uuid,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -66,7 +66,7 @@ create table if not exists tasks (
   phase          text check (phase in ('30','60','90')),
   pain_point_id  uuid references pain_points(id) on delete set null,
   goal_id        uuid references goals(id) on delete set null,
-  owner_id       uuid references auth.users(id) on delete cascade,
+  owner_id       uuid,
   created_at     timestamptz default now(),
   updated_at     timestamptz default now()
 );
@@ -81,7 +81,7 @@ create table if not exists milestones (
                check (status in ('not_started','on_track','at_risk','complete')),
   notes      text,
   goal_id    uuid references goals(id) on delete set null,
-  owner_id   uuid references auth.users(id) on delete cascade,
+  owner_id   uuid,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -94,7 +94,7 @@ create table if not exists agendas (
   items        jsonb default '[]'::jsonb,
   attendees    text[] default '{}',
   notes        text,
-  owner_id     uuid references auth.users(id) on delete cascade,
+  owner_id     uuid,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
 );
@@ -111,7 +111,7 @@ create table if not exists followups (
   reminder_sent boolean default false,
   agenda_id     uuid references agendas(id) on delete set null,
   task_id       uuid references tasks(id) on delete set null,
-  owner_id      uuid references auth.users(id) on delete cascade,
+  owner_id      uuid,
   created_at    timestamptz default now(),
   updated_at    timestamptz default now()
 );
@@ -123,13 +123,13 @@ create table if not exists reports (
   date_range_end   date,
   share_token      uuid default uuid_generate_v4() unique not null,
   report_data      jsonb default '{}'::jsonb,
-  owner_id         uuid references auth.users(id) on delete cascade,
+  owner_id         uuid,
   created_at       timestamptz default now()
 );
 
 create table if not exists user_settings (
   id                 uuid primary key default uuid_generate_v4(),
-  owner_id           uuid references auth.users(id) on delete cascade unique,
+  owner_id           uuid unique,
   display_name       text,
   company_name       text,
   role_title         text default 'Head of Talent Acquisition',
