@@ -170,11 +170,10 @@ function AddTagForm({ onAdd }: { onAdd: (_name: string, _color: string, _cat: 'o
 }
 
 // ─── Main ─────────────────────────────────────────────────────
-export default function SettingsClient({ initialSettings, initialTags, userId, userEmail }: {
+export default function SettingsClient({ initialSettings, initialTags, userId }: {
   initialSettings: UserSettings | null
   initialTags: Tag[]
   userId: string
-  userEmail: string
 }) {
   const supabase = createClient()
 
@@ -184,7 +183,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId, u
     company_name: initialSettings?.company_name ?? '',
     role_title: initialSettings?.role_title ?? 'Head of Talent Acquisition',
     start_date: initialSettings?.start_date ?? new Date().toISOString().split('T')[0],
-    notification_email: initialSettings?.notification_email ?? userEmail,
+    notification_email: initialSettings?.notification_email ?? '',
   })
   const [savingProfile, setSavingProfile] = useState(false)
 
@@ -247,13 +246,6 @@ export default function SettingsClient({ initialSettings, initialTags, userId, u
           <div>
             <h3 className="font-bold text-[#1B3A5C] mb-0.5" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Your Profile</h3>
             <p className="text-xs text-slate-400">Used in reports and the dashboard sidebar phase tracker.</p>
-          </div>
-
-          {/* Email — read only */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Login Email</label>
-            <div className="px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500">{userEmail}</div>
-            <p className="text-xs text-slate-400 mt-1">Email is set by your magic link auth and cannot be changed here.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
