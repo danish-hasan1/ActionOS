@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Plus, Search, AlertTriangle, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
+import { Plus, Search, AlertTriangle, Pencil, Trash2, Check, X } from 'lucide-react'
 import type { PainPoint, Tag, Severity, PainPointStatus, Phase } from '@/types'
 import {
   Badge, TagBadge, EmptyState, Button, Modal, FormField,
@@ -11,9 +11,86 @@ import {
 } from '@/components/ui'
 import { SEVERITY_CONFIG, PAIN_STATUS_CONFIG, PHASE_CONFIG, formatDate, cn } from '@/lib/utils'
 
+const TAG_COLORS = [
+  '#6366F1', '#8B5CF6', '#EC4899', '#EF4444', '#F59E0B',
+  '#10B981', '#3B82F6', '#F97316', '#14B8A6', '#64748B',
+]
+
+// ─── Inline Quick-Add Tag ─────────────────────────────────────
+function InlineAddTag({ category, onAdd }: {
+  category: 'owner' | 'category'
+  onAdd: (tag: Tag) => void
+}) {
+  const supabase = createClient()
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState('')
+  const [color, setColor] = useState(TAG_COLORS[0])
+  const [saving, setSaving] = useState(false)
+
+  async function submit() {
+    if (!name.trim()) return
+    setSaving(true)
+    const { data, error } = await supabase
+      .from('tags')
+      .insert({ name: name.trim(), color, category })
+      .select()
+      .single()
+    if (error) {
+      toast.error(error.message)
+    } else {
+      onAdd(data as Tag)
+      setName('')
+      setColor(TAG_COLORS[0])
+      setOpen(false)
+      toast.success('Tag created')
+    }
+    setSaving(false)
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 transition-all"
+      >
+        <Plus className="w-3 h-3" /> New tag
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2 mt-2 p-2 bg-white border border-indigo-100 rounded-xl">
+      <div className="flex gap-1.5 shrink-0">
+        {TAG_COLORS.map(c => (
+          <button
+            key={c}
+            onClick={() => setColor(c)}
+            className={cn('w-4 h-4 rounded-full border-2 transition-transform hover:scale-110', color === c ? 'border-slate-600 scale-110' : 'border-transparent')}
+            style={{ backgroundColor: c }}
+          />
+        ))}
+      </div>
+      <input
+        autoFocus
+        className="flex-1 min-w-0 px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-300"
+        placeholder="Tag name..."
+        value={name}
+        onChange={e => setName(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') setOpen(false) }}
+      />
+      <button onClick={submit} disabled={!name.trim() || saving} className="p-1 text-green-600 hover:bg-green-50 rounded-lg disabled:opacity-40 transition-colors">
+        <Check className="w-3.5 h-3.5" />
+      </button>
+      <button onClick={() => setOpen(false)} className="p-1 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors">
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  )
+}
+
 // ─── Add / Edit Modal ─────────────────────────────────────────
 function PainPointModal({
-  open, onClose, tags, userId, editing, onSaved
+  open, onClose, tags: initialTags, userId, editing, onSaved
 }: {
   open: boolean
   onClose: () => void
@@ -24,6 +101,7 @@ function PainPointModal({
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const [tags, setTags] = useState<Tag[]>(initialTags)
   const [form, setForm] = useState({
     title: editing?.title ?? '',
     description: editing?.description ?? '',
@@ -43,6 +121,11 @@ function PainPointModal({
       ? form.tag_ids.filter(t => t !== id)
       : [...form.tag_ids, id]
     )
+  }
+
+  function handleNewTag(tag: Tag) {
+    setTags(prev => [...prev, tag])
+    setForm(f => ({ ...f, tag_ids: [...f.tag_ids, tag.id] }))
   }
 
   async function save() {
@@ -74,7 +157,6 @@ function PainPointModal({
     setLoading(false)
   }
 
-  // Group tags
   const ownerTags = tags.filter(t => t.category === 'owner')
   const catTags = tags.filter(t => t.category === 'category')
 
@@ -116,38 +198,46 @@ function PainPointModal({
           </select>
         </FormField>
 
+        {/* Owner Tags */}
         <FormField label="Owner Tags">
-          <div className="flex flex-wrap gap-2 p-3 border border-slate-200 rounded-xl bg-slate-50 min-h-[44px]">
-            {ownerTags.map(tag => (
-              <button key={tag.id} onClick={() => toggleTag(tag.id)}
-                className={cn('px-2.5 py-1 rounded-full text-xs font-medium border transition-all',
-                  form.tag_ids.includes(tag.id) ? 'ring-2 ring-offset-1' : 'opacity-60 hover:opacity-100'
-                )}
-                style={{
-                  backgroundColor: `${tag.color}18`, color: tag.color,
-                  borderColor: `${tag.color}40`,
-                  outline: form.tag_ids.includes(tag.id) ? `2px solid ${tag.color}` : undefined,
-                  outlineOffset: '2px'
-                }}
-              >
-                {tag.name}
-              </button>
-            ))}
+          <div className="p-3 border border-slate-200 rounded-xl bg-slate-50 min-h-[44px]">
+            <div className="flex flex-wrap gap-2">
+              {ownerTags.map(tag => (
+                <button key={tag.id} onClick={() => toggleTag(tag.id)}
+                  className={cn('px-2.5 py-1 rounded-full text-xs font-medium border transition-all',
+                    form.tag_ids.includes(tag.id) ? 'ring-2 ring-offset-1' : 'opacity-60 hover:opacity-100'
+                  )}
+                  style={{
+                    backgroundColor: `${tag.color}18`, color: tag.color,
+                    borderColor: `${tag.color}40`,
+                    outline: form.tag_ids.includes(tag.id) ? `2px solid ${tag.color}` : undefined,
+                    outlineOffset: '2px'
+                  }}
+                >
+                  {tag.name}
+                </button>
+              ))}
+              <InlineAddTag category="owner" onAdd={handleNewTag} />
+            </div>
           </div>
         </FormField>
 
+        {/* Category Tags */}
         <FormField label="Category Tags">
-          <div className="flex flex-wrap gap-2 p-3 border border-slate-200 rounded-xl bg-slate-50 min-h-[44px]">
-            {catTags.map(tag => (
-              <button key={tag.id} onClick={() => toggleTag(tag.id)}
-                className={cn('px-2.5 py-1 rounded-full text-xs font-medium border transition-all',
-                  form.tag_ids.includes(tag.id) ? 'ring-2 ring-offset-1' : 'opacity-60 hover:opacity-100'
-                )}
-                style={{ backgroundColor: `${tag.color}18`, color: tag.color, borderColor: `${tag.color}40` }}
-              >
-                {tag.name}
-              </button>
-            ))}
+          <div className="p-3 border border-slate-200 rounded-xl bg-slate-50 min-h-[44px]">
+            <div className="flex flex-wrap gap-2">
+              {catTags.map(tag => (
+                <button key={tag.id} onClick={() => toggleTag(tag.id)}
+                  className={cn('px-2.5 py-1 rounded-full text-xs font-medium border transition-all',
+                    form.tag_ids.includes(tag.id) ? 'ring-2 ring-offset-1' : 'opacity-60 hover:opacity-100'
+                  )}
+                  style={{ backgroundColor: `${tag.color}18`, color: tag.color, borderColor: `${tag.color}40` }}
+                >
+                  {tag.name}
+                </button>
+              ))}
+              <InlineAddTag category="category" onAdd={handleNewTag} />
+            </div>
           </div>
         </FormField>
 
@@ -237,7 +327,7 @@ function PainPointCard({
 
 // ─── Main Client Component ─────────────────────────────────────
 export default function PainPointsClient({
-  initialPainPoints, tags, userId
+  initialPainPoints, tags: initialTags, userId
 }: {
   initialPainPoints: PainPoint[]
   tags: Tag[]
@@ -245,6 +335,7 @@ export default function PainPointsClient({
 }) {
   const supabase = createClient()
   const [painPoints, setPainPoints] = useState<PainPoint[]>(initialPainPoints)
+  const [allTags, setAllTags] = useState<Tag[]>(initialTags)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<PainPoint | null>(null)
   const [search, setSearch] = useState('')
@@ -316,7 +407,7 @@ export default function PainPointsClient({
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 cursor-pointer"
+        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 cursor-pointer"
           value={filterSeverity} onChange={e => setFilterSeverity(e.target.value as Severity | 'all')}>
           <option value="all">All Severities</option>
           <option value="critical">Critical</option>
@@ -324,14 +415,14 @@ export default function PainPointsClient({
           <option value="medium">Medium</option>
           <option value="low">Low</option>
         </select>
-        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 cursor-pointer"
+        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 cursor-pointer"
           value={filterStatus} onChange={e => setFilterStatus(e.target.value as PainPointStatus | 'all')}>
           <option value="all">All Statuses</option>
           <option value="open">Open</option>
           <option value="in_progress">In Progress</option>
           <option value="resolved">Resolved</option>
         </select>
-        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 cursor-pointer"
+        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 cursor-pointer"
           value={filterPhase} onChange={e => setFilterPhase(e.target.value as Phase | 'all')}>
           <option value="all">All Phases</option>
           <option value="30">Phase 1 (30)</option>
@@ -359,7 +450,7 @@ export default function PainPointsClient({
       ) : (
         <div className="grid gap-3">
           {filtered.map(pp => (
-            <PainPointCard key={pp.id} pp={pp} tags={tags} onEdit={openEdit} onDelete={handleDelete} />
+            <PainPointCard key={pp.id} pp={pp} tags={allTags} onEdit={openEdit} onDelete={handleDelete} />
           ))}
         </div>
       )}
@@ -368,7 +459,7 @@ export default function PainPointsClient({
       <PainPointModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        tags={tags}
+        tags={allTags}
         userId={userId}
         editing={editing}
         onSaved={handleSaved}
