@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { upsertPainPoint, deletePainPoint, insertTag } from '@/lib/actions'
-import { Plus, Search, AlertTriangle, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Plus, Search, AlertTriangle, Pencil, Trash2, Check, X, MoreHorizontal } from 'lucide-react'
 import type { PainPoint, Tag, Severity, PainPointStatus, Phase } from '@/types'
 import {
   Badge, TagBadge, EmptyState, Button, Modal, FormField,
