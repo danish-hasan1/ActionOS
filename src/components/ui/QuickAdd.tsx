@@ -79,7 +79,7 @@ export default function QuickAdd({ userId }: { userId: string }) {
             'w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-200',
             menuOpen
               ? 'bg-slate-700 rotate-45'
-              : 'bg-[#E85D26] hover:bg-[#d44f1f] hover:scale-105'
+              : 'bg-[#F59E0B] hover:bg-[#D97706] hover:scale-105'
           )}
         >
           {menuOpen

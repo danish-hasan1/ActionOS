@@ -188,7 +188,7 @@ function PainPointCard({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-slate-800 text-sm leading-snug group-hover:text-[#1B3A5C] transition-colors" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <h3 className="font-semibold text-slate-800 text-sm leading-snug group-hover:text-indigo-700 transition-colors" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               {pp.title}
             </h3>
             <div className="relative shrink-0">
@@ -292,7 +292,7 @@ export default function PainPointsClient({
       {/* Stats strip */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total', value: painPoints.length, color: '#1B3A5C' },
+          { label: 'Total', value: painPoints.length, color: '#4F46E5' },
           { label: 'Critical', value: counts.critical, color: '#EF4444' },
           { label: 'Open', value: counts.open, color: '#F59E0B' },
         ].map(s => (
@@ -310,13 +310,13 @@ export default function PainPointsClient({
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 focus:border-[#1B3A5C]"
+            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
             placeholder="Search pain points..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 cursor-pointer"
+        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 cursor-pointer"
           value={filterSeverity} onChange={e => setFilterSeverity(e.target.value as Severity | 'all')}>
           <option value="all">All Severities</option>
           <option value="critical">Critical</option>
@@ -324,14 +324,14 @@ export default function PainPointsClient({
           <option value="medium">Medium</option>
           <option value="low">Low</option>
         </select>
-        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 cursor-pointer"
+        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 cursor-pointer"
           value={filterStatus} onChange={e => setFilterStatus(e.target.value as PainPointStatus | 'all')}>
           <option value="all">All Statuses</option>
           <option value="open">Open</option>
           <option value="in_progress">In Progress</option>
           <option value="resolved">Resolved</option>
         </select>
-        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 cursor-pointer"
+        <select className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 cursor-pointer"
           value={filterPhase} onChange={e => setFilterPhase(e.target.value as Phase | 'all')}>
           <option value="all">All Phases</option>
           <option value="30">Phase 1 (30)</option>

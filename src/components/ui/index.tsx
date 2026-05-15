@@ -42,7 +42,7 @@ interface ProgressBarProps {
   showLabel?: boolean
   label?: string
 }
-export function ProgressBar({ pct, color = '#1B3A5C', height = 'h-2', showLabel = false, label }: ProgressBarProps) {
+export function ProgressBar({ pct, color = '#4F46E5', height = 'h-2', showLabel = false, label }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, pct))
   return (
     <div>
@@ -70,7 +70,7 @@ interface StatCardProps {
   color?: string
   icon?: React.ReactNode
 }
-export function StatCard({ label, value, sub, color = '#1B3A5C', icon }: StatCardProps) {
+export function StatCard({ label, value, sub, color = '#4F46E5', icon }: StatCardProps) {
   return (
     <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
@@ -115,7 +115,7 @@ export function PageHeader({ title, description, action }: {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{title}</h1>
+        <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{title}</h1>
         {description && <p className="text-sm text-slate-400 mt-0.5">{description}</p>}
       </div>
       {action}
@@ -140,7 +140,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 export function Button({ variant = 'primary', size = 'md', className, children, ...props }: ButtonProps) {
   const variants = {
-    primary: 'bg-[#1B3A5C] hover:bg-[#162d47] text-white shadow-sm',
+    primary: 'bg-[#4F46E5] hover:bg-[#4338CA] text-white shadow-sm',
     secondary: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200',
     ghost: 'hover:bg-slate-100 text-slate-600',
     danger: 'bg-red-500 hover:bg-red-600 text-white shadow-sm',
@@ -176,7 +176,7 @@ export function Modal({ open, onClose, title, children }: {
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{title}</h2>
+          <h2 className="text-lg font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{title}</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors text-xl leading-none">×</button>
         </div>
         <div className="p-6">{children}</div>
@@ -204,6 +204,6 @@ export function FormField({ label, required, children, hint }: {
 }
 
 // ─── Input / Textarea / Select ────────────────────────────────
-export const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 focus:border-[#1B3A5C] transition bg-white'
+export const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 focus:border-[#4F46E5] transition bg-white'
 export const selectCls = inputCls + ' cursor-pointer'
 export const textareaCls = inputCls + ' resize-none'

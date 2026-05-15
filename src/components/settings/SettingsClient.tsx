@@ -20,7 +20,7 @@ type UserSettings = {
 const PRESET_COLORS = [
   '#6366F1', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
   '#64748B', '#10B981', '#3B82F6', '#F97316', '#14B8A6',
-  '#EAB308', '#1B3A5C', '#E85D26', '#2E9E6B', '#DC2626',
+  '#EAB308', '#4F46E5', '#F59E0B', '#10B981', '#DC2626',
 ]
 
 // ─── Tag Row ──────────────────────────────────────────────────
@@ -42,7 +42,7 @@ function TagRow({ tag, onDelete, onUpdate }: {
 
   return (
     <div className={cn('flex items-center gap-3 p-3 rounded-xl border transition-all',
-      editing ? 'border-[#1B3A5C]/30 bg-slate-50' : 'border-slate-100 bg-white hover:border-slate-200'
+      editing ? 'border-indigo-200 bg-slate-50' : 'border-slate-100 bg-white hover:border-slate-200'
     )}>
       {editing ? (
         <>
@@ -58,7 +58,7 @@ function TagRow({ tag, onDelete, onUpdate }: {
             ))}
           </div>
           <input
-            className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30"
+            className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
             value={name}
             onChange={e => setName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && save()}
@@ -112,7 +112,7 @@ function AddTagForm({ onAdd }: { onAdd: (_name: string, _color: string, _cat: 'o
   }
 
   return (
-    <div className="p-4 rounded-xl border-2 border-[#1B3A5C]/20 bg-slate-50 space-y-3">
+    <div className="p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50/40 space-y-3">
       <p className="text-sm font-semibold text-slate-700">New Tag</p>
       <div>
         <p className="text-xs text-slate-500 mb-2">Choose colour</p>
@@ -233,7 +233,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
         {([['profile', 'Profile & Preferences', User], ['tags', 'Tag Management', TagIcon]] as [string, string, React.ElementType][]).map(([val, label, Icon]) => (
           <button key={val} onClick={() => setActiveTab(val as typeof activeTab)}
             className={cn('flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-              activeTab === val ? 'bg-[#1B3A5C] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              activeTab === val ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
             )}>
             <Icon className="w-4 h-4" />{label}
           </button>
@@ -244,7 +244,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
       {activeTab === 'profile' && (
         <Card className="p-6 space-y-5">
           <div>
-            <h3 className="font-bold text-[#1B3A5C] mb-0.5" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Your Profile</h3>
+            <h3 className="font-bold text-[#4F46E5] mb-0.5" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Your Profile</h3>
             <p className="text-xs text-slate-400">Used in reports and the dashboard sidebar phase tracker.</p>
           </div>
 
@@ -276,11 +276,11 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
             const phaseLabel = days <= 30 ? 'Learn & Listen' : days <= 60 ? 'Fix & Build' : 'Scale & Optimise'
             const pct = Math.min(100, Math.round((days / 90) * 100))
             return (
-              <div className="p-4 bg-[#1B3A5C]/5 rounded-xl border border-[#1B3A5C]/10">
-                <p className="text-xs font-semibold text-[#1B3A5C] mb-2">📍 Current position in your 90-day plan</p>
-                <p className="text-sm font-bold text-[#1B3A5C]">Day {Math.max(1, days)} · Phase {phase} — {phaseLabel}</p>
-                <div className="mt-2 h-2 bg-white rounded-full overflow-hidden border border-[#1B3A5C]/10">
-                  <div className="h-full bg-[#E85D26] rounded-full" style={{ width: `${pct}%` }} />
+              <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                <p className="text-xs font-semibold text-indigo-700 mb-2">📍 Current position in your 90-day plan</p>
+                <p className="text-sm font-bold text-indigo-900">Day {Math.max(1, days)} · Phase {phase} — {phaseLabel}</p>
+                <div className="mt-2 h-2 bg-white rounded-full overflow-hidden border border-[#4F46E5]/10">
+                  <div className="h-full bg-[#F59E0B] rounded-full" style={{ width: `${pct}%` }} />
                 </div>
                 <p className="text-xs text-slate-400 mt-1">{pct}% through your 90-day plan</p>
               </div>
@@ -299,7 +299,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
           {/* Owner tags */}
           <Card className="p-6">
             <div className="mb-4">
-              <h3 className="font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Owner Tags</h3>
+              <h3 className="font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Owner Tags</h3>
               <p className="text-xs text-slate-400 mt-0.5">Tag pain points by who owns the issue — Recruiter, AM, HM, etc.</p>
             </div>
             <div className="space-y-2 mb-3">
@@ -316,7 +316,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
           {/* Category tags */}
           <Card className="p-6">
             <div className="mb-4">
-              <h3 className="font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Category Tags</h3>
+              <h3 className="font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Category Tags</h3>
               <p className="text-xs text-slate-400 mt-0.5">Tag pain points by type — Process, Technology, Communication, etc.</p>
             </div>
             <div className="space-y-2 mb-3">

@@ -29,7 +29,7 @@ export default function TopBar({
   if (mobileOnly) {
     return (
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-full bg-[#1B3A5C] flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center shrink-0">
           <span className="text-white text-xs font-bold">{initials}</span>
         </div>
       </div>
@@ -39,15 +39,15 @@ export default function TopBar({
   return (
     <div className="flex items-center justify-between w-full">
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-xs text-slate-400">ActionPlan OS</span>
-        <span className="text-slate-300">/</span>
-        <span className="text-sm font-semibold text-slate-700 truncate">{label}</span>
+        <span className="text-xs text-gray-400">ActionPlan OS</span>
+        <span className="text-gray-300">/</span>
+        <span className="text-sm font-semibold text-gray-800 truncate">{label}</span>
       </div>
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
-        <div className="w-6 h-6 rounded-full bg-[#1B3A5C] flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+        <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center shrink-0">
           <span className="text-white text-xs font-bold">{initials}</span>
         </div>
-        <span className="text-sm text-slate-600 font-medium">{name}</span>
+        <span className="text-sm text-gray-600 font-medium">{name}</span>
       </div>
     </div>
   )

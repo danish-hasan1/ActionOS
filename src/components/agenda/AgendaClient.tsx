@@ -151,8 +151,8 @@ function AgendaCard({ agenda, onEdit, onDelete, onItemToggle }: {
     <Card className="overflow-hidden">
       {/* Header */}
       <button className="w-full flex items-start gap-3 p-4 hover:bg-slate-50 transition-colors text-left" onClick={() => setExpanded(v => !v)}>
-        <div className="w-9 h-9 rounded-xl bg-[#1B3A5C]/10 flex items-center justify-center shrink-0 mt-0.5">
-          <ClipboardList className="w-5 h-5 text-[#1B3A5C]" />
+        <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+          <ClipboardList className="w-5 h-5 text-indigo-600" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -175,7 +175,7 @@ function AgendaCard({ agenda, onEdit, onDelete, onItemToggle }: {
           </div>
           {total > 0 && (
             <div className="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-[#2E9E6B] rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full bg-[#10B981] rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           )}
         </div>

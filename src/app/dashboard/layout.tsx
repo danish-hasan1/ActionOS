@@ -15,16 +15,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single()
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8F9FC]">
+    <div className="flex h-screen overflow-hidden bg-[#F5F6FA]">
       <div className="hidden md:block">
         <Sidebar startDate={settings?.start_date} />
       </div>
 
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        <header className="h-14 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-6 shrink-0">
+        <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-6 shrink-0">
           <div className="flex items-center gap-3 md:hidden">
             <MobileSidebar startDate={settings?.start_date} />
-            <span className="text-sm font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>ActionPlan OS</span>
+            <span className="text-sm font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>ActionPlan OS</span>
           </div>
           <div className="hidden md:block w-full">
             <TopBar displayName={settings?.display_name} />

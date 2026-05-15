@@ -165,7 +165,7 @@ function TaskCard({ task, onEdit, onDelete, onStatusChange, compact = false }: {
             'mt-0.5 w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-all',
             task.status === 'done'
               ? 'bg-green-500 border-green-500'
-              : 'border-slate-300 hover:border-[#1B3A5C]'
+              : 'border-slate-300 hover:border-indigo-400'
           )}
         >
           {task.status === 'done' && (
@@ -353,7 +353,7 @@ export default function TasksClient({ initialTasks, painPoints, goals, userId }:
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 focus:border-[#1B3A5C]"
+          <input className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
             placeholder="Search tasks..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
@@ -384,10 +384,10 @@ export default function TasksClient({ initialTasks, painPoints, goals, userId }:
 
         {/* View toggle */}
         <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1">
-          <button onClick={() => setView('list')} className={cn('p-1.5 rounded-lg transition-colors', view === 'list' ? 'bg-[#1B3A5C] text-white' : 'text-slate-400 hover:text-slate-600')}>
+          <button onClick={() => setView('list')} className={cn('p-1.5 rounded-lg transition-colors', view === 'list' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-600')}>
             <List className="w-4 h-4" />
           </button>
-          <button onClick={() => setView('kanban')} className={cn('p-1.5 rounded-lg transition-colors', view === 'kanban' ? 'bg-[#1B3A5C] text-white' : 'text-slate-400 hover:text-slate-600')}>
+          <button onClick={() => setView('kanban')} className={cn('p-1.5 rounded-lg transition-colors', view === 'kanban' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-600')}>
             <LayoutGrid className="w-4 h-4" />
           </button>
         </div>

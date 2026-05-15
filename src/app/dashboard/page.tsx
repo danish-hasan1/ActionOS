@@ -45,11 +45,11 @@ export default async function DashboardPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{greeting}</h1>
+        <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{greeting}</h1>
         <p className="text-slate-400 text-sm mt-0.5">{settings?.role_title ?? 'Head of Talent Acquisition'} · Your command centre overview.</p>
       </div>
 
-      <Card className="p-5 mb-6 bg-gradient-to-r from-[#1B3A5C] to-[#2d5a8e] border-0">
+      <Card className="p-5 mb-6 bg-gradient-to-r from-indigo-500 to-indigo-700 border-0">
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-0.5">Phase {phase} of 3</p>
@@ -63,19 +63,19 @@ export default async function DashboardPage() {
             <p className="text-white font-bold text-3xl" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{overallPct}%</p>
           </div>
         </div>
-        <ProgressBar pct={overallPct} color="#E85D26" height="h-2" />
+        <ProgressBar pct={overallPct} color="#F59E0B" height="h-2" />
       </Card>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Open Pain Points" value={openPP.length} sub={`${criticalPP.length} critical`} color="#EF4444" icon={<AlertTriangle className="w-4 h-4" />} />
-        <StatCard label="Tasks" value={`${doneTasks}/${totalTasks}`} sub="completed" color="#1B3A5C" icon={<CheckSquare className="w-4 h-4" />} />
-        <StatCard label="Avg Goal Progress" value={`${avgGoalPct}%`} sub={`${gl.length} goals tracked`} color="#2E9E6B" icon={<Target className="w-4 h-4" />} />
+        <StatCard label="Tasks" value={`${doneTasks}/${totalTasks}`} sub="completed" color="#4F46E5" icon={<CheckSquare className="w-4 h-4" />} />
+        <StatCard label="Avg Goal Progress" value={`${avgGoalPct}%`} sub={`${gl.length} goals tracked`} color="#10B981" icon={<Target className="w-4 h-4" />} />
         <StatCard label="Pending Follow-ups" value={fu.length} sub="action required" color="#F59E0B" icon={<Bell className="w-4 h-4" />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Top Open Pain Points</h3>
+          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Top Open Pain Points</h3>
           {openPP.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No open pain points 🎉</p>
           ) : (
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Goal Progress</h3>
+          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Goal Progress</h3>
           {gl.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No goals set yet</p>
           ) : (
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
                     <p className="text-sm text-slate-700 font-medium line-clamp-1 flex-1 mr-3">{g.title}</p>
                     <span className="text-xs font-bold text-slate-500 shrink-0">{g.progress_pct}%</span>
                   </div>
-                  <ProgressBar pct={g.progress_pct} color={g.type === 'short_term' ? '#7C3AED' : '#2E9E6B'} height="h-1.5" />
+                  <ProgressBar pct={g.progress_pct} color={g.type === 'short_term' ? '#7C3AED' : '#10B981'} height="h-1.5" />
                 </div>
               ))}
             </div>
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Pending Follow-ups</h3>
+          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Pending Follow-ups</h3>
           {fu.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No pending follow-ups ✓</p>
           ) : (
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>30/60/90 Day Progress</h3>
+          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>30/60/90 Day Progress</h3>
           <div className="space-y-4">
             {(['30', '60', '90'] as const).map(ph => {
               const phCfg   = PHASE_CONFIG[ph]

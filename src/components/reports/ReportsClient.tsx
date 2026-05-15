@@ -25,7 +25,7 @@ function ReportPreview({ data }: { data: Record<string, unknown> }) {
     <div className="space-y-6 text-sm">
       {/* Header */}
       <div className="pb-4 border-b border-slate-200">
-        <h2 className="text-xl font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{d.title}</h2>
+        <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{d.title}</h2>
         <p className="text-xs text-slate-400 mt-1">Generated {new Date(d.generated_at).toLocaleString('en-IN')}</p>
       </div>
 
@@ -33,8 +33,8 @@ function ReportPreview({ data }: { data: Record<string, unknown> }) {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Open Pain Points', value: d.stats.openPainPoints, sub: `${d.stats.criticalPainPoints} critical`, color: '#EF4444' },
-          { label: 'Tasks Done', value: `${d.stats.doneTasks}/${d.stats.totalTasks}`, color: '#1B3A5C' },
-          { label: 'Avg Goal Progress', value: `${d.stats.avgGoalProgress}%`, color: '#2E9E6B' },
+          { label: 'Tasks Done', value: `${d.stats.doneTasks}/${d.stats.totalTasks}`, color: '#4F46E5' },
+          { label: 'Avg Goal Progress', value: `${d.stats.avgGoalProgress}%`, color: '#10B981' },
         ].map(s => (
           <div key={s.label} className="p-3 bg-slate-50 rounded-xl text-center">
             <p className="text-xs text-slate-400 mb-1">{s.label}</p>
@@ -74,7 +74,7 @@ function ReportPreview({ data }: { data: Record<string, unknown> }) {
                   <span className="text-sm text-slate-700">{g.title}</span>
                   <span className="text-xs font-bold text-slate-500">{g.progress_pct}%</span>
                 </div>
-                <ProgressBar pct={g.progress_pct} color={g.type === 'short_term' ? '#7C3AED' : '#2E9E6B'} height="h-1.5" />
+                <ProgressBar pct={g.progress_pct} color={g.type === 'short_term' ? '#7C3AED' : '#10B981'} height="h-1.5" />
               </div>
             ))}
           </div>
@@ -122,8 +122,8 @@ function ReportCard({ report, onDelete }: { report: Report; onDelete: (id: strin
 
   return (
     <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:shadow-sm transition-shadow">
-      <div className="w-9 h-9 rounded-xl bg-[#1B3A5C]/10 flex items-center justify-center shrink-0">
-        <FileText className="w-5 h-5 text-[#1B3A5C]" />
+      <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+        <FileText className="w-5 h-5 text-indigo-600" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-slate-800 truncate">{(report.report_data as { title?: string })?.title ?? 'Report'}</p>
@@ -215,14 +215,14 @@ export default function ReportsClient({ painPoints, goals, tasks, milestones, in
       {/* Left — Generate */}
       <div className="space-y-5">
         <Card className="p-5">
-          <h3 className="font-bold text-[#1B3A5C] text-base mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <h3 className="font-bold text-[#4F46E5] text-base mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             Generate New Report
           </h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Report Title</label>
               <input
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 focus:border-[#1B3A5C]"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
                 value={reportTitle}
                 onChange={e => setReportTitle(e.target.value)}
               />
@@ -230,7 +230,7 @@ export default function ReportsClient({ painPoints, goals, tasks, milestones, in
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">TA Head Notes <span className="text-slate-400 font-normal">(optional narrative for leadership)</span></label>
               <textarea
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3A5C]/30 focus:border-[#1B3A5C] resize-none"
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 resize-none"
                 rows={4}
                 placeholder="Add context, highlights, or strategic notes for leadership..."
                 value={notes}

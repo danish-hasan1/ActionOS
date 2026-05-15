@@ -113,9 +113,9 @@ function GoalModal({ open, onClose, userId, editing, onSaved }: {
               type="range" min={0} max={100} step={5}
               value={form.progress_pct}
               onChange={e => set('progress_pct', Number(e.target.value))}
-              className="w-full accent-[#1B3A5C]"
+              className="w-full accent-indigo-600"
             />
-            <ProgressBar pct={form.progress_pct} color="#1B3A5C" height="h-2" />
+            <ProgressBar pct={form.progress_pct} color="#4F46E5" height="h-2" />
           </div>
         </FormField>
 
@@ -140,7 +140,7 @@ function GoalCard({ goal, linkedTasks, onEdit, onDelete, onProgressUpdate }: {
 }) {
   const stat = GOAL_STATUS_CONFIG[goal.status]
   const isShort = goal.type === 'short_term'
-  const progressColor = isShort ? '#7C3AED' : '#2E9E6B'
+  const progressColor = isShort ? '#7C3AED' : '#10B981'
   const doneTasks = linkedTasks.filter(t => t.status === 'done').length
   const totalTasks = linkedTasks.length
 
@@ -265,10 +265,10 @@ export default function GoalsClient({ initialGoals, allTasks, userId }: {
     <>
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Goals" value={goals.length} color="#1B3A5C" icon={<Target className="w-4 h-4" />} />
+        <StatCard label="Total Goals" value={goals.length} color="#4F46E5" icon={<Target className="w-4 h-4" />} />
         <StatCard label="Short Term" value={shortTerm.length} sub="30-day wins" color="#7C3AED" icon={<TrendingUp className="w-4 h-4" />} />
-        <StatCard label="Long Term" value={longTerm.length} sub="strategic" color="#2E9E6B" icon={<TrendingUp className="w-4 h-4" />} />
-        <StatCard label="Avg Progress" value={`${avgProgress}%`} sub={`${complete.length} complete`} color="#E85D26" icon={<CheckCircle2 className="w-4 h-4" />} />
+        <StatCard label="Long Term" value={longTerm.length} sub="strategic" color="#10B981" icon={<TrendingUp className="w-4 h-4" />} />
+        <StatCard label="Avg Progress" value={`${avgProgress}%`} sub={`${complete.length} complete`} color="#F59E0B" icon={<CheckCircle2 className="w-4 h-4" />} />
       </div>
 
       {/* Overall progress bar */}
@@ -276,12 +276,12 @@ export default function GoalsClient({ initialGoals, allTasks, userId }: {
         <Card className="p-5 mb-6">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-sm font-bold text-[#1B3A5C]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Overall Goal Progress</p>
+              <p className="text-sm font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Overall Goal Progress</p>
               <p className="text-xs text-slate-400 mt-0.5">Across all {goals.length} goals</p>
             </div>
-            <span className="text-2xl font-bold text-[#E85D26]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{avgProgress}%</span>
+            <span className="text-2xl font-bold text-[#F59E0B]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{avgProgress}%</span>
           </div>
-          <ProgressBar pct={avgProgress} color="#E85D26" height="h-3" />
+          <ProgressBar pct={avgProgress} color="#F59E0B" height="h-3" />
 
           {/* Per-phase breakdown */}
           <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-100">
@@ -312,7 +312,7 @@ export default function GoalsClient({ initialGoals, allTasks, userId }: {
           {([['all', 'All'], ['short_term', 'Short Term'], ['long_term', 'Long Term']] as [GoalType | 'all', string][]).map(([val, label]) => (
             <button key={val} onClick={() => setActiveTab(val)}
               className={cn('px-4 py-1.5 rounded-lg text-sm font-medium transition-all',
-                activeTab === val ? 'bg-[#1B3A5C] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                activeTab === val ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
               )}>
               {label}
             </button>

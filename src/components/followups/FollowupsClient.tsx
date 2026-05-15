@@ -258,7 +258,7 @@ export default function FollowupsClient({ initialFollowups, agendas, tasks, user
           {([['all', 'All'], ['pending', 'Pending'], ['overdue', 'Overdue'], ['done', 'Done']] as [FollowupStatus | 'all', string][]).map(([val, label]) => (
             <button key={val} onClick={() => setFilterStatus(val)}
               className={cn('px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-                filterStatus === val ? 'bg-[#1B3A5C] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                filterStatus === val ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
               )}>
               {label}
               {val === 'overdue' && overdue.length > 0 && (

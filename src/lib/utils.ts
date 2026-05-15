@@ -32,9 +32,9 @@ export const PRIORITY_CONFIG = {
 }
 
 export const PHASE_CONFIG = {
-  '30': { label: 'Day 1–30',  bg: 'bg-violet-100', text: 'text-violet-700', color: '#7C3AED' },
-  '60': { label: 'Day 31–60', bg: 'bg-orange-100', text: 'text-orange-700', color: '#EA580C' },
-  '90': { label: 'Day 61–90', bg: 'bg-emerald-100', text: 'text-emerald-700', color: '#059669' },
+  '30': { label: 'Day 1–30',  bg: 'bg-violet-50', text: 'text-violet-700', color: '#7C3AED' },
+  '60': { label: 'Day 31–60', bg: 'bg-amber-50',  text: 'text-amber-700',  color: '#F59E0B' },
+  '90': { label: 'Day 61–90', bg: 'bg-emerald-50', text: 'text-emerald-700', color: '#10B981' },
 }
 
 export const GOAL_STATUS_CONFIG = {

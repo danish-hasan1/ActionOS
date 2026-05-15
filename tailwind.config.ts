@@ -9,9 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: '#1B3A5C',
-        accent: '#E85D26',
-        accent2: '#2E9E6B',
+        primary: {
+          DEFAULT: '#6366F1',
+          dark: '#4F46E5',
+          light: '#EEF2FF',
+        },
+        accent: '#F59E0B',
+        accent2: '#10B981',
       },
       fontFamily: {
         jakarta: ['Plus Jakarta Sans', 'sans-serif'],

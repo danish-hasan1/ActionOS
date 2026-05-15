@@ -29,14 +29,14 @@ export default async function SharePage({ params }: { params: { token: string } 
   return (
     <div className="min-h-screen bg-[#F8F9FC]">
       {/* Header */}
-      <div className="bg-[#1B3A5C] text-white px-6 py-5">
+      <div className="bg-indigo-600 text-white px-6 py-5">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div>
             <p className="text-white/50 text-xs uppercase tracking-wide font-semibold mb-0.5">ActionPlan OS — Shared Report</p>
             <h1 className="text-xl font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{d.title}</h1>
             <p className="text-white/50 text-xs mt-1">Generated {new Date(d.generated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-[#E85D26] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-amber-400 flex items-center justify-center">
             <span className="text-white font-bold text-lg" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>A</span>
           </div>
         </div>
@@ -47,8 +47,8 @@ export default async function SharePage({ params }: { params: { token: string } 
         <div className="grid grid-cols-3 gap-4">
           {[
             { label: 'Open Pain Points', value: d.stats.openPainPoints, sub: `${d.stats.criticalPainPoints} critical`, color: '#EF4444' },
-            { label: 'Tasks Complete', value: `${d.stats.doneTasks}/${d.stats.totalTasks}`, color: '#1B3A5C' },
-            { label: 'Avg Goal Progress', value: `${d.stats.avgGoalProgress}%`, color: '#2E9E6B' },
+            { label: 'Tasks Complete', value: `${d.stats.doneTasks}/${d.stats.totalTasks}`, color: '#4F46E5' },
+            { label: 'Avg Goal Progress', value: `${d.stats.avgGoalProgress}%`, color: '#10B981' },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm text-center">
               <p className="text-xs text-slate-400 mb-1">{s.label}</p>
@@ -92,7 +92,7 @@ export default async function SharePage({ params }: { params: { token: string } 
                     <span className="text-sm text-slate-700 font-medium">{g.title}</span>
                     <span className="text-xs font-bold text-slate-500">{g.progress_pct}%</span>
                   </div>
-                  <ProgressBar pct={g.progress_pct} color={g.type === 'short_term' ? '#7C3AED' : '#2E9E6B'} height="h-2" />
+                  <ProgressBar pct={g.progress_pct} color={g.type === 'short_term' ? '#7C3AED' : '#10B981'} height="h-2" />
                 </div>
               ))}
             </div>
