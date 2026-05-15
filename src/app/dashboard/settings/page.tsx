@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   return (
     <div>
       <PageHeader title="Settings" description="Manage your profile, tags, and dashboard preferences." />
-      <SettingsClient initialSettings={settings} initialTags={tags ?? []} userId={OWNER_ID} userEmail="" />
+      <SettingsClient initialSettings={settings} initialTags={tags ?? []} userId={OWNER_ID} />
     </div>
   )
 }
