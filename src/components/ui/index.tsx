@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 // ─── Badge ────────────────────────────────────────────────────
@@ -69,10 +70,11 @@ interface StatCardProps {
   sub?: string
   color?: string
   icon?: React.ReactNode
+  href?: string
 }
-export function StatCard({ label, value, sub, color = '#4F46E5', icon }: StatCardProps) {
-  return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+export function StatCard({ label, value, sub, color = '#4F46E5', icon, href }: StatCardProps) {
+  const inner = (
+    <>
       <div className="flex items-start justify-between mb-3">
         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{label}</p>
         {icon && (
@@ -83,8 +85,12 @@ export function StatCard({ label, value, sub, color = '#4F46E5', icon }: StatCar
       </div>
       <p className="text-3xl font-bold" style={{ color, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{value}</p>
       {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
-    </div>
+    </>
   )
+  const cls = 'bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow block'
+  return href
+    ? <Link href={href} className={cn(cls, 'hover:border-indigo-200 cursor-pointer')}>{inner}</Link>
+    : <div className={cls}>{inner}</div>
 }
 
 // ─── EmptyState ───────────────────────────────────────────────

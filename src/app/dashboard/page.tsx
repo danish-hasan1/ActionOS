@@ -1,6 +1,7 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { OWNER_ID } from '@/lib/owner'
-import { AlertTriangle, CheckSquare, Target, Bell } from 'lucide-react'
+import { AlertTriangle, CheckSquare, Target, Bell, ArrowRight } from 'lucide-react'
 import { StatCard, Card, ProgressBar, Badge } from '@/components/ui'
 import { SEVERITY_CONFIG, PHASE_CONFIG } from '@/lib/utils'
 
@@ -49,33 +50,38 @@ export default async function DashboardPage() {
         <p className="text-slate-400 text-sm mt-0.5">{settings?.role_title ?? 'Head of Talent Acquisition'} · Your command centre overview.</p>
       </div>
 
-      <Card className="p-5 mb-6 bg-gradient-to-r from-indigo-500 to-indigo-700 border-0">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-0.5">Phase {phase} of 3</p>
-            <h2 className="text-white font-bold text-lg" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{phaseLabel}</h2>
-            <p className="text-white/50 text-xs mt-0.5">
-              Day {days} of 90 · {days <= 30 ? 'Stakeholder mapping, process audit, pain point logging' : days <= 60 ? 'Quick wins, process redesign, recruiter enablement' : 'Strategic hiring plan, metrics, tech stack review'}
-            </p>
+      <Link href="/dashboard/roadmap">
+        <Card className="p-5 mb-6 bg-gradient-to-r from-indigo-500 to-indigo-700 border-0 cursor-pointer hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-0.5">Phase {phase} of 3</p>
+              <h2 className="text-white font-bold text-lg" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{phaseLabel}</h2>
+              <p className="text-white/50 text-xs mt-0.5">
+                Day {days} of 90 · {days <= 30 ? 'Stakeholder mapping, process audit, pain point logging' : days <= 60 ? 'Quick wins, process redesign, recruiter enablement' : 'Strategic hiring plan, metrics, tech stack review'}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-white/40 text-xs mb-1">Overall Progress</p>
+              <p className="text-white font-bold text-3xl" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{overallPct}%</p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-white/40 text-xs mb-1">Overall Progress</p>
-            <p className="text-white font-bold text-3xl" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{overallPct}%</p>
-          </div>
-        </div>
-        <ProgressBar pct={overallPct} color="#F59E0B" height="h-2" />
-      </Card>
+          <ProgressBar pct={overallPct} color="#F59E0B" height="h-2" />
+        </Card>
+      </Link>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Open Pain Points" value={openPP.length} sub={`${criticalPP.length} critical`} color="#EF4444" icon={<AlertTriangle className="w-4 h-4" />} />
-        <StatCard label="Tasks" value={`${doneTasks}/${totalTasks}`} sub="completed" color="#4F46E5" icon={<CheckSquare className="w-4 h-4" />} />
-        <StatCard label="Avg Goal Progress" value={`${avgGoalPct}%`} sub={`${gl.length} goals tracked`} color="#10B981" icon={<Target className="w-4 h-4" />} />
-        <StatCard label="Pending Follow-ups" value={fu.length} sub="action required" color="#F59E0B" icon={<Bell className="w-4 h-4" />} />
+        <StatCard label="Open Pain Points" value={openPP.length} sub={`${criticalPP.length} critical`} color="#EF4444" icon={<AlertTriangle className="w-4 h-4" />} href="/dashboard/pain-points" />
+        <StatCard label="Tasks" value={`${doneTasks}/${totalTasks}`} sub="completed" color="#4F46E5" icon={<CheckSquare className="w-4 h-4" />} href="/dashboard/tasks" />
+        <StatCard label="Avg Goal Progress" value={`${avgGoalPct}%`} sub={`${gl.length} goals tracked`} color="#10B981" icon={<Target className="w-4 h-4" />} href="/dashboard/goals" />
+        <StatCard label="Pending Follow-ups" value={fu.length} sub="action required" color="#F59E0B" icon={<Bell className="w-4 h-4" />} href="/dashboard/followups" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card className="p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Top Open Pain Points</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-800 text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Top Open Pain Points</h3>
+            <Link href="/dashboard/pain-points" className="flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">View all <ArrowRight className="w-3 h-3" /></Link>
+          </div>
           {openPP.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No open pain points 🎉</p>
           ) : (
@@ -96,7 +102,10 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Goal Progress</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-800 text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Goal Progress</h3>
+            <Link href="/dashboard/goals" className="flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">View all <ArrowRight className="w-3 h-3" /></Link>
+          </div>
           {gl.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No goals set yet</p>
           ) : (
@@ -115,7 +124,10 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Pending Follow-ups</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-800 text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Pending Follow-ups</h3>
+            <Link href="/dashboard/followups" className="flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">View all <ArrowRight className="w-3 h-3" /></Link>
+          </div>
           {fu.length === 0 ? (
             <p className="text-slate-400 text-sm py-6 text-center">No pending follow-ups ✓</p>
           ) : (
@@ -140,7 +152,10 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>30/60/90 Day Progress</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-800 text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>30/60/90 Day Progress</h3>
+            <Link href="/dashboard/roadmap" className="flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">View roadmap <ArrowRight className="w-3 h-3" /></Link>
+          </div>
           <div className="space-y-4">
             {(['30', '60', '90'] as const).map(ph => {
               const phCfg   = PHASE_CONFIG[ph]
