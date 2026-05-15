@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { quickInsert } from '@/lib/actions'
 import { Plus, X, CheckSquare, AlertTriangle } from 'lucide-react'
 import { Modal, FormField, Button, inputCls, selectCls } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils'
 type QuickType = 'task' | 'pain_point'
 
 export default function QuickAdd({ userId }: { userId: string }) {
-  const supabase = createClient()
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [type, setType] = useState<QuickType>('task')
@@ -27,19 +26,19 @@ export default function QuickAdd({ userId }: { userId: string }) {
     setLoading(true)
     if (type === 'task') {
       if (!task.title.trim()) { toast.error('Title required'); setLoading(false); return }
-      const { error } = await supabase.from('tasks').insert({
+      const { error } = await quickInsert('tasks', {
         title: task.title.trim(), priority: task.priority,
         phase: task.phase || null, status: 'todo', owner_id: userId
       })
-      if (error) toast.error(error.message)
+      if (error) toast.error(error)
       else { toast.success('Task created'); setTask({ title: '', priority: 'medium', phase: '' }); setOpen(false) }
     } else {
       if (!pp.title.trim()) { toast.error('Title required'); setLoading(false); return }
-      const { error } = await supabase.from('pain_points').insert({
+      const { error } = await quickInsert('pain_points', {
         title: pp.title.trim(), severity: pp.severity,
         phase: pp.phase || null, status: 'open', tag_ids: [], owner_id: userId
       })
-      if (error) toast.error(error.message)
+      if (error) toast.error(error)
       else { toast.success('Pain point logged'); setPP({ title: '', severity: 'medium', phase: '' }); setOpen(false) }
     }
     setLoading(false)
@@ -79,7 +78,7 @@ export default function QuickAdd({ userId }: { userId: string }) {
             'w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-200',
             menuOpen
               ? 'bg-slate-700 rotate-45'
-              : 'bg-[#F59E0B] hover:bg-[#D97706] hover:scale-105'
+              : 'bg-indigo-500 hover:bg-indigo-600 hover:scale-105'
           )}
         >
           {menuOpen

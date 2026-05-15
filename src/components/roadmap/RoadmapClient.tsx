@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { upsertMilestone, updateMilestoneStatus, deleteMilestone } from '@/lib/actions'
 import { Plus, Map, Pencil, Trash2, Calendar, CheckCircle2, AlertTriangle, Clock, Circle } from 'lucide-react'
 import type { Milestone, MilestoneStatus, Phase } from '@/types'
 import {
@@ -27,7 +27,6 @@ function MilestoneModal({ open, onClose, userId, editing, goals, onSaved }: {
   goals: { id: string; title: string }[]
   onSaved: (m: Milestone) => void
 }) {
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: editing?.title ?? '',
@@ -56,13 +55,8 @@ function MilestoneModal({ open, onClose, userId, editing, goals, onSaved }: {
       goal_id: form.goal_id || null,
       owner_id: userId,
     }
-    let result
-    if (editing) {
-      result = await supabase.from('milestones').update(payload).eq('id', editing.id).select().single()
-    } else {
-      result = await supabase.from('milestones').insert(payload).select().single()
-    }
-    if (result.error) { toast.error(result.error.message) }
+    const result = await upsertMilestone(payload, editing?.id)
+    if (result.error) { toast.error(result.error) }
     else {
       toast.success(editing ? 'Milestone updated' : 'Milestone created')
       onSaved(result.data as Milestone)
@@ -189,7 +183,6 @@ export default function RoadmapClient({ initialMilestones, goals, userId }: {
   goals: { id: string; title: string }[]
   userId: string
 }) {
-  const supabase = createClient()
   const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Milestone | null>(null)
@@ -204,15 +197,15 @@ export default function RoadmapClient({ initialMilestones, goals, userId }: {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this milestone?')) return
-    const { error } = await supabase.from('milestones').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deleteMilestone(id)
+    if (error) toast.error(error)
     else { setMilestones(prev => prev.filter(m => m.id !== id)); toast.success('Deleted') }
   }
 
   async function handleStatusCycle(m: Milestone) {
     const nextStatus = STATUS_CYCLE[m.status]
-    const { data, error } = await supabase.from('milestones').update({ status: nextStatus }).eq('id', m.id).select().single()
-    if (error) toast.error(error.message)
+    const { data, error } = await updateMilestoneStatus(m.id, nextStatus)
+    if (error) toast.error(error)
     else setMilestones(prev => prev.map(p => p.id === m.id ? data as Milestone : p))
   }
 

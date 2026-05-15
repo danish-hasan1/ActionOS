@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { upsertReport, deleteReport } from '@/lib/actions'
 import { FileText, Plus, Trash2, Copy, CheckCircle2, AlertTriangle, Target, Map } from 'lucide-react'
 import type { PainPoint, Goal, Task, Milestone, Report } from '@/types'
 import { Button, Card, ProgressBar, Badge } from '@/components/ui'
@@ -150,7 +150,6 @@ export default function ReportsClient({ painPoints, goals, tasks, milestones, in
   initialReports: Report[]
   userId: string
 }) {
-  const supabase = createClient()
   const [reports, setReports] = useState<Report[]>(initialReports)
   const [generating, setGenerating] = useState(false)
   const [preview, setPreview] = useState<Record<string, unknown> | null>(null)
@@ -188,13 +187,13 @@ export default function ReportsClient({ painPoints, goals, tasks, milestones, in
   async function handleGenerate() {
     setGenerating(true)
     const reportData = buildReportData()
-    const { data, error } = await supabase.from('reports').insert({
+    const { data, error } = await upsertReport({
       title: reportTitle,
       report_data: reportData,
       owner_id: userId,
-    }).select().single()
+    })
 
-    if (error) { toast.error(error.message) }
+    if (error) { toast.error(error) }
     else {
       setReports(prev => [data as Report, ...prev])
       setPreview(null)
@@ -205,8 +204,8 @@ export default function ReportsClient({ painPoints, goals, tasks, milestones, in
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this report?')) return
-    const { error } = await supabase.from('reports').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deleteReport(id)
+    if (error) toast.error(error)
     else { setReports(prev => prev.filter(r => r.id !== id)); toast.success('Report deleted') }
   }
 

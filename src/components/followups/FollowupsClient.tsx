@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { upsertFollowup, deleteFollowup } from '@/lib/actions'
 import { Plus, Bell, CheckCircle2, Clock, AlertCircle, Pencil, Trash2, Calendar, MoreHorizontal } from 'lucide-react'
 import type { Followup, FollowupStatus, Priority } from '@/types'
 import {
@@ -21,7 +21,7 @@ function FollowupModal({ open, onClose, userId, editing, agendas, tasks, onSaved
   tasks: { id: string; title: string }[]
   onSaved: (_: Followup) => void
 }) {
-  const supabase = createClient()
+
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: editing?.title ?? '',
@@ -51,12 +51,8 @@ function FollowupModal({ open, onClose, userId, editing, agendas, tasks, onSaved
       owner_id: userId,
     }
     let result
-    if (editing) {
-      result = await supabase.from('followups').update(payload).eq('id', editing.id).select().single()
-    } else {
-      result = await supabase.from('followups').insert(payload).select().single()
-    }
-    if (result.error) { toast.error(result.error.message) }
+    result = await upsertFollowup(payload, editing?.id)
+    if (result.error) { toast.error(result.error) }
     else {
       toast.success(editing ? 'Follow-up updated' : 'Follow-up created')
       onSaved(result.data as Followup)
@@ -191,7 +187,7 @@ export default function FollowupsClient({ initialFollowups, agendas, tasks, user
   tasks: { id: string; title: string }[]
   userId: string
 }) {
-  const supabase = createClient()
+
   const [followups, setFollowups] = useState<Followup[]>(initialFollowups)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Followup | null>(null)
@@ -232,14 +228,14 @@ export default function FollowupsClient({ initialFollowups, agendas, tasks, user
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this follow-up?')) return
-    const { error } = await supabase.from('followups').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deleteFollowup(id)
+    if (error) toast.error(error)
     else { setFollowups(prev => prev.filter(f => f.id !== id)); toast.success('Deleted') }
   }
 
   async function handleMarkDone(id: string) {
-    const { data, error } = await supabase.from('followups').update({ status: 'done' }).eq('id', id).select().single()
-    if (error) toast.error(error.message)
+    const { data, error } = await upsertFollowup({ status: 'done' }, id)
+    if (error) toast.error(error)
     else { setFollowups(prev => prev.map(f => f.id === id ? data as Followup : f)); toast.success('Marked as done') }
   }
 

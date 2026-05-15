@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { upsertPainPoint, deletePainPoint, insertTag } from '@/lib/actions'
 import { Plus, Search, AlertTriangle, Pencil, Trash2, Check, X } from 'lucide-react'
 import type { PainPoint, Tag, Severity, PainPointStatus, Phase } from '@/types'
 import {
@@ -21,7 +21,6 @@ function InlineAddTag({ category, onAdd }: {
   category: 'owner' | 'category'
   onAdd: (tag: Tag) => void
 }) {
-  const supabase = createClient()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [color, setColor] = useState(TAG_COLORS[0])
@@ -30,13 +29,9 @@ function InlineAddTag({ category, onAdd }: {
   async function submit() {
     if (!name.trim()) return
     setSaving(true)
-    const { data, error } = await supabase
-      .from('tags')
-      .insert({ name: name.trim(), color, category })
-      .select()
-      .single()
+    const { data, error } = await insertTag(name.trim(), color, category)
     if (error) {
-      toast.error(error.message)
+      toast.error(error)
     } else {
       onAdd(data as Tag)
       setName('')
@@ -99,7 +94,6 @@ function PainPointModal({
   editing?: PainPoint | null
   onSaved: (_: PainPoint) => void
 }) {
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [tags, setTags] = useState<Tag[]>(initialTags)
   const [form, setForm] = useState({
@@ -141,14 +135,9 @@ function PainPointModal({
       tag_ids: form.tag_ids,
       owner_id: userId,
     }
-    let result
-    if (editing) {
-      result = await supabase.from('pain_points').update(payload).eq('id', editing.id).select().single()
-    } else {
-      result = await supabase.from('pain_points').insert(payload).select().single()
-    }
+    const result = await upsertPainPoint(payload, editing?.id)
     if (result.error) {
-      toast.error(result.error.message)
+      toast.error(result.error)
     } else {
       toast.success(editing ? 'Pain point updated' : 'Pain point logged')
       onSaved(result.data as PainPoint)
@@ -333,7 +322,6 @@ export default function PainPointsClient({
   tags: Tag[]
   userId: string
 }) {
-  const supabase = createClient()
   const [painPoints, setPainPoints] = useState<PainPoint[]>(initialPainPoints)
   const [allTags, setAllTags] = useState<Tag[]>(initialTags)
   const [modalOpen, setModalOpen] = useState(false)
@@ -373,8 +361,8 @@ export default function PainPointsClient({
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this pain point? This cannot be undone.')) return
-    const { error } = await supabase.from('pain_points').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deletePainPoint(id)
+    if (error) toast.error(error)
     else { setPainPoints(prev => prev.filter(p => p.id !== id)); toast.success('Deleted') }
   }
 

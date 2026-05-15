@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { upsertGoal, deleteGoal } from '@/lib/actions'
 import { Plus, Target, Pencil, Trash2, CheckCircle2, Circle, TrendingUp } from 'lucide-react'
 import type { Goal, GoalType, GoalStatus, Phase } from '@/types'
 import {
@@ -21,7 +21,6 @@ function GoalModal({ open, onClose, userId, editing, onSaved }: {
   editing?: Goal | null
   onSaved: (_: Goal) => void
 }) {
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: editing?.title ?? '',
@@ -50,14 +49,9 @@ function GoalModal({ open, onClose, userId, editing, onSaved }: {
       progress_pct: form.progress_pct,
       owner_id: userId,
     }
-    let result
-    if (editing) {
-      result = await supabase.from('goals').update(payload).eq('id', editing.id).select().single()
-    } else {
-      result = await supabase.from('goals').insert(payload).select().single()
-    }
+    const result = await upsertGoal(payload, editing?.id)
     if (result.error) {
-      toast.error(result.error.message)
+      toast.error(result.error)
     } else {
       toast.success(editing ? 'Goal updated' : 'Goal created')
       onSaved(result.data as Goal)
@@ -219,7 +213,6 @@ export default function GoalsClient({ initialGoals, allTasks, userId }: {
   allTasks: LinkedTask[]
   userId: string
 }) {
-  const supabase = createClient()
   const [goals, setGoals] = useState<Goal[]>(initialGoals)
   const [tasks] = useState<LinkedTask[]>(allTasks)
   const [modalOpen, setModalOpen] = useState(false)
@@ -255,8 +248,8 @@ export default function GoalsClient({ initialGoals, allTasks, userId }: {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this goal?')) return
-    const { error } = await supabase.from('goals').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deleteGoal(id)
+    if (error) toast.error(error)
     else { setGoals(prev => prev.filter(g => g.id !== id)); toast.success('Goal deleted') }
   }
 

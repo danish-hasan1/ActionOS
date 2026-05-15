@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { upsertAgenda, updateAgendaItems, deleteAgenda } from '@/lib/actions'
 import { Plus, ClipboardList, CheckSquare, Square, Pencil, Trash2, ChevronDown, ChevronRight, Calendar, Users } from 'lucide-react'
 import type { Agenda, AgendaItem } from '@/types'
 import {
@@ -21,7 +21,6 @@ function AgendaModal({ open, onClose, userId, editing, onSaved }: {
   editing?: Agenda | null
   onSaved: (_: Agenda) => void
 }) {
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: editing?.title ?? '',
@@ -63,13 +62,8 @@ function AgendaModal({ open, onClose, userId, editing, onSaved }: {
       items: form.items,
       owner_id: userId,
     }
-    let result
-    if (editing) {
-      result = await supabase.from('agendas').update(payload).eq('id', editing.id).select().single()
-    } else {
-      result = await supabase.from('agendas').insert(payload).select().single()
-    }
-    if (result.error) { toast.error(result.error.message) }
+    const result = await upsertAgenda(payload, editing?.id)
+    if (result.error) { toast.error(result.error) }
     else {
       toast.success(editing ? 'Agenda updated' : 'Agenda created')
       onSaved(result.data as Agenda)
@@ -231,7 +225,6 @@ export default function AgendaClient({ initialAgendas, userId }: {
   initialAgendas: Agenda[]
   userId: string
 }) {
-  const supabase = createClient()
   const [agendas, setAgendas] = useState<Agenda[]>(initialAgendas)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Agenda | null>(null)
@@ -245,8 +238,8 @@ export default function AgendaClient({ initialAgendas, userId }: {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this agenda?')) return
-    const { error } = await supabase.from('agendas').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deleteAgenda(id)
+    if (error) toast.error(error)
     else { setAgendas(prev => prev.filter(a => a.id !== id)); toast.success('Agenda deleted') }
   }
 
@@ -254,8 +247,8 @@ export default function AgendaClient({ initialAgendas, userId }: {
     const agenda = agendas.find(a => a.id === agendaId)
     if (!agenda) return
     const updatedItems = agenda.items.map(i => i.id === itemId ? { ...i, checked } : i)
-    const { data, error } = await supabase.from('agendas').update({ items: updatedItems }).eq('id', agendaId).select().single()
-    if (error) toast.error(error.message)
+    const { data, error } = await updateAgendaItems(agendaId, updatedItems)
+    if (error) toast.error(error)
     else setAgendas(prev => prev.map(a => a.id === agendaId ? data as Agenda : a))
   }
 

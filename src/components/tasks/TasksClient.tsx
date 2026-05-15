@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { upsertTask, updateTaskStatus, deleteTask } from '@/lib/actions'
 import { Plus, Search, CheckSquare, LayoutGrid, List, Pencil, Trash2, Calendar, MoreHorizontal } from 'lucide-react'
 import type { Task, TaskStatus, Priority, Phase } from '@/types'
 import {
@@ -25,7 +25,6 @@ function TaskModal({
   goals: { id: string; title: string }[]
   onSaved: (_: Task) => void
 }) {
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: editing?.title ?? '',
@@ -56,14 +55,9 @@ function TaskModal({
       goal_id: form.goal_id || null,
       owner_id: userId,
     }
-    let result
-    if (editing) {
-      result = await supabase.from('tasks').update(payload).eq('id', editing.id).select().single()
-    } else {
-      result = await supabase.from('tasks').insert(payload).select().single()
-    }
+    const result = await upsertTask(payload, editing?.id)
     if (result.error) {
-      toast.error(result.error.message)
+      toast.error(result.error)
     } else {
       toast.success(editing ? 'Task updated' : 'Task created')
       onSaved(result.data as Task)
@@ -289,7 +283,6 @@ export default function TasksClient({ initialTasks, painPoints, goals, userId }:
   goals: { id: string; title: string }[]
   userId: string
 }) {
-  const supabase = createClient()
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Task | null>(null)
@@ -322,14 +315,14 @@ export default function TasksClient({ initialTasks, painPoints, goals, userId }:
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this task?')) return
-    const { error } = await supabase.from('tasks').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deleteTask(id)
+    if (error) toast.error(error)
     else { setTasks(prev => prev.filter(t => t.id !== id)); toast.success('Task deleted') }
   }
 
   async function handleStatusChange(id: string, status: TaskStatus) {
-    const { data, error } = await supabase.from('tasks').update({ status }).eq('id', id).select().single()
-    if (error) toast.error(error.message)
+    const { data, error } = await updateTaskStatus(id, status)
+    if (error) toast.error(error)
     else setTasks(prev => prev.map(t => t.id === id ? data as Task : t))
   }
 

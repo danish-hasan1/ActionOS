@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { saveUserSettings, insertTag, updateTag, deleteTag } from '@/lib/actions'
 import { User, Tag as TagIcon, Plus, Trash2, Pencil, Check, X, Save } from 'lucide-react'
 import type { Tag } from '@/types'
 import { Button, Card, FormField, inputCls } from '@/components/ui'
@@ -175,8 +175,6 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
   initialTags: Tag[]
   userId: string
 }) {
-  const supabase = createClient()
-
   // Profile state
   const [profile, setProfile] = useState<UserSettings>({
     display_name: initialSettings?.display_name ?? '',
@@ -195,31 +193,29 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
   async function saveProfile() {
     setSavingProfile(true)
     const payload = { ...profile, owner_id: userId }
-    const { error } = initialSettings?.id
-      ? await supabase.from('user_settings').update(payload).eq('id', initialSettings.id)
-      : await supabase.from('user_settings').insert(payload)
-    if (error) toast.error(error.message)
+    const { error } = await saveUserSettings(payload, initialSettings?.id)
+    if (error) toast.error(error)
     else toast.success('Profile saved')
     setSavingProfile(false)
   }
 
   // ── Tag ops ───────────────────────────────────────────────
   async function handleAddTag(name: string, color: string, category: 'owner' | 'category') {
-    const { data, error } = await supabase.from('tags').insert({ name, color, category }).select().single()
-    if (error) toast.error(error.message)
+    const { data, error } = await insertTag(name, color, category)
+    if (error) toast.error(error)
     else { setTags(prev => [...prev, data as Tag]); toast.success('Tag added') }
   }
 
   async function handleUpdateTag(updated: Tag) {
-    const { error } = await supabase.from('tags').update({ name: updated.name, color: updated.color }).eq('id', updated.id)
-    if (error) toast.error(error.message)
+    const { error } = await updateTag(updated.id, updated.name, updated.color)
+    if (error) toast.error(error)
     else { setTags(prev => prev.map(t => t.id === updated.id ? updated : t)); toast.success('Tag updated') }
   }
 
   async function handleDeleteTag(id: string) {
     if (!confirm('Delete this tag? It will be removed from all pain points.')) return
-    const { error } = await supabase.from('tags').delete().eq('id', id)
-    if (error) toast.error(error.message)
+    const { error } = await deleteTag(id)
+    if (error) toast.error(error)
     else { setTags(prev => prev.filter(t => t.id !== id)); toast.success('Tag deleted') }
   }
 
