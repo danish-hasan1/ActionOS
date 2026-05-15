@@ -266,7 +266,7 @@ export default function SettingsClient({ initialSettings, initialTags, userId }:
           </FormField>
 
           <FormField label="Reminder Email" hint="Where follow-up reminders will be sent (if enabled).">
-            <input type="email" className={inputCls} value={profile.notification_email ?? ''} onChange={e => setProfile(p => ({ ...p, notification_email: e.target.value }))} placeholder={userEmail} />
+            <input type="email" className={inputCls} value={profile.notification_email ?? ''} onChange={e => setProfile(p => ({ ...p, notification_email: e.target.value }))} placeholder="you@company.com" />
           </FormField>
 
           {/* Phase preview */}
