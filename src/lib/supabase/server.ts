@@ -1,10 +1,9 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-// No-auth server client — uses the anon key directly
-// RLS is disabled in schema (see supabase-schema.sql notes)
+// Server client — uses service role key so reads bypass RLS on all dashboard pages
 export async function createClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
