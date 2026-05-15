@@ -75,10 +75,21 @@ export interface Milestone {
   updated_at: string
 }
 
+export type SubItemType = 'task' | 'pain_point' | 'goal' | 'milestone' | 'note'
+
+export interface AgendaSubItem {
+  id: string
+  text: string
+  checked: boolean
+  type: SubItemType
+}
+
 export interface AgendaItem {
   id: string
   text: string
   checked: boolean
+  progress_pct: number
+  subitems: AgendaSubItem[]
   linked_task_id?: string | null
 }
 
