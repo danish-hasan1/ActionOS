@@ -6,19 +6,20 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, AlertTriangle, CheckSquare, Target,
-  Map, ClipboardList, Bell, FileText, Settings, Zap, Menu, X
+  Map, ClipboardList, Bell, FileText, Settings, Zap, Menu, X, CalendarCheck
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',             label: 'Overview',   icon: LayoutDashboard },
-  { href: '/dashboard/pain-points', label: 'Pain Points',icon: AlertTriangle },
-  { href: '/dashboard/tasks',       label: 'Tasks',      icon: CheckSquare },
-  { href: '/dashboard/goals',       label: 'Goals',      icon: Target },
-  { href: '/dashboard/roadmap',     label: 'Roadmap',    icon: Map },
-  { href: '/dashboard/agenda',      label: 'Agenda',     icon: ClipboardList },
-  { href: '/dashboard/followups',   label: 'Follow-ups', icon: Bell },
-  { href: '/dashboard/reports',     label: 'Reports',    icon: FileText },
-  { href: '/dashboard/settings',    label: 'Settings',   icon: Settings },
+  { href: '/dashboard',             label: 'Overview',    icon: LayoutDashboard },
+  { href: '/dashboard/daily',       label: 'Daily Tasks', icon: CalendarCheck },
+  { href: '/dashboard/pain-points', label: 'Pain Points', icon: AlertTriangle },
+  { href: '/dashboard/tasks',       label: 'Tasks',       icon: CheckSquare },
+  { href: '/dashboard/goals',       label: 'Goals',       icon: Target },
+  { href: '/dashboard/roadmap',     label: 'Roadmap',     icon: Map },
+  { href: '/dashboard/agenda',      label: 'Agenda',      icon: ClipboardList },
+  { href: '/dashboard/followups',   label: 'Follow-ups',  icon: Bell },
+  { href: '/dashboard/reports',     label: 'Reports',     icon: FileText },
+  { href: '/dashboard/settings',    label: 'Settings',    icon: Settings },
 ]
 
 export default function MobileSidebar({ startDate }: { startDate?: string | null }) {

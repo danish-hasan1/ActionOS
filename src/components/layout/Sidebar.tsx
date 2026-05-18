@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, AlertTriangle, CheckSquare, Target,
-  Map, ClipboardList, Bell, FileText, Settings, Zap
+  Map, ClipboardList, Bell, FileText, Settings, Zap, CalendarCheck
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/dashboard',              label: 'Overview',    icon: LayoutDashboard },
+  { href: '/dashboard/daily',        label: 'Daily Tasks', icon: CalendarCheck },
   { href: '/dashboard/pain-points',  label: 'Pain Points', icon: AlertTriangle, alert: true },
   { href: '/dashboard/tasks',        label: 'Tasks',       icon: CheckSquare },
   { href: '/dashboard/goals',        label: 'Goals',       icon: Target },

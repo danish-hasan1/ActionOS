@@ -106,6 +106,19 @@ export interface Agenda {
   updated_at: string
 }
 
+export interface DailyTask {
+  id: string
+  title: string
+  date: string
+  checked: boolean
+  priority: 'high' | 'medium' | 'low'
+  notes: string | null
+  order_index: number
+  owner_id: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Followup {
   id: string
   title: string

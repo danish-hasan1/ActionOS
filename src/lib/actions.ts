@@ -208,6 +208,42 @@ export async function deleteTag(id: string): Promise<ActionResult> {
   return { data, error: null }
 }
 
+// ─── Daily Tasks ──────────────────────────────────────────────
+export async function upsertDailyTask(payload: Record<string, unknown>, id?: string): Promise<ActionResult> {
+  const db = createAdminClient()
+  const q = id
+    ? db.from('daily_tasks').update(payload).eq('id', id).select().single()
+    : db.from('daily_tasks').insert(payload).select().single()
+  const { data, error } = await q
+  if (error) return { data: null, error: error.message }
+  revalidatePath('/dashboard/daily')
+  return { data, error: null }
+}
+
+export async function deleteDailyTask(id: string): Promise<ActionResult> {
+  const db = createAdminClient()
+  const { data, error } = await db.from('daily_tasks').delete().eq('id', id).select().single()
+  if (error) return { data: null, error: error.message }
+  revalidatePath('/dashboard/daily')
+  return { data, error: null }
+}
+
+export async function carryForwardTasks(
+  tasks: { title: string; priority: string; notes: string | null; order_index: number }[],
+  toDate: string,
+  ownerId: string
+): Promise<ActionResult> {
+  const db = createAdminClient()
+  const rows = tasks.map((t, i) => ({
+    title: t.title, priority: t.priority, notes: t.notes,
+    date: toDate, checked: false, order_index: i, owner_id: ownerId,
+  }))
+  const { data, error } = await db.from('daily_tasks').insert(rows).select()
+  if (error) return { data: null, error: error.message }
+  revalidatePath('/dashboard/daily')
+  return { data, error: null }
+}
+
 // ─── Quick Add ────────────────────────────────────────────────
 export async function quickInsert(table: string, payload: Record<string, unknown>): Promise<ActionResult> {
   const db = createAdminClient()

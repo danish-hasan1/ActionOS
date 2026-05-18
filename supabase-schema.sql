@@ -377,6 +377,22 @@ on conflict (name) do nothing;
 -- all CRUD so saves work without auth.uid() being set.
 -- ═══════════════════════════════════════════════════════════════
 
+create table if not exists daily_tasks (
+  id          uuid primary key default uuid_generate_v4(),
+  title       text not null,
+  date        date not null default current_date,
+  checked     boolean not null default false,
+  priority    text not null default 'medium'
+                check (priority in ('high','medium','low')),
+  notes       text,
+  order_index integer not null default 0,
+  owner_id    uuid,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+alter table daily_tasks enable row level security;
+
 drop policy if exists "anon_all_tags"          on tags;
 drop policy if exists "anon_all_goals"         on goals;
 drop policy if exists "anon_all_pain_points"   on pain_points;
@@ -386,6 +402,7 @@ drop policy if exists "anon_all_agendas"       on agendas;
 drop policy if exists "anon_all_followups"     on followups;
 drop policy if exists "anon_all_reports"       on reports;
 drop policy if exists "anon_all_user_settings" on user_settings;
+drop policy if exists "anon_all_daily_tasks"   on daily_tasks;
 
 create policy "anon_all_tags"          on tags          for all to anon using (true) with check (true);
 create policy "anon_all_goals"         on goals         for all to anon using (true) with check (true);
@@ -396,6 +413,7 @@ create policy "anon_all_agendas"       on agendas       for all to anon using (t
 create policy "anon_all_followups"     on followups     for all to anon using (true) with check (true);
 create policy "anon_all_reports"       on reports       for all to anon using (true) with check (true);
 create policy "anon_all_user_settings" on user_settings for all to anon using (true) with check (true);
+create policy "anon_all_daily_tasks"   on daily_tasks   for all to anon using (true) with check (true);
 
 -- ═══════════════════════════════════════════════════════════════
 -- SEED OWNER: Insert a fixed owner row so the app works
