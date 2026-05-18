@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { OWNER_ID } from '@/lib/owner'
-import { AlertTriangle, CheckSquare, Target, Bell, ArrowRight } from 'lucide-react'
+import { AlertTriangle, CheckSquare, Target, Bell, ArrowRight, CalendarCheck, Square } from 'lucide-react'
 import { StatCard, Card, ProgressBar, Badge } from '@/components/ui'
 import { SEVERITY_CONFIG, PHASE_CONFIG } from '@/lib/utils'
 
@@ -10,24 +10,30 @@ export const dynamic = 'force-dynamic'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
   const [
     { data: painPoints },
     { data: tasks },
     { data: goals },
     { data: followups },
     { data: settings },
+    { data: dailyTasks },
   ] = await Promise.all([
     supabase.from('pain_points').select('*').eq('owner_id', OWNER_ID),
     supabase.from('tasks').select('*').eq('owner_id', OWNER_ID),
     supabase.from('goals').select('*').eq('owner_id', OWNER_ID),
     supabase.from('followups').select('*').eq('owner_id', OWNER_ID).eq('status', 'pending').order('due_date'),
     supabase.from('user_settings').select('start_date, display_name, role_title').eq('owner_id', OWNER_ID).single(),
+    supabase.from('daily_tasks').select('*').eq('owner_id', OWNER_ID).eq('date', todayStr).order('order_index').order('created_at'),
   ])
 
   const pp  = painPoints ?? []
   const tsk = tasks ?? []
   const gl  = goals ?? []
   const fu  = followups ?? []
+  const dt  = (dailyTasks ?? []) as { id: string; title: string; checked: boolean; priority: string }[]
 
   const openPP     = pp.filter(p => p.status !== 'resolved')
   const criticalPP = pp.filter(p => p.severity === 'critical')
@@ -75,6 +81,69 @@ export default async function DashboardPage() {
         <StatCard label="Avg Goal Progress" value={`${avgGoalPct}%`} sub={`${gl.length} goals tracked`} color="#10B981" icon={<Target className="w-4 h-4" />} href="/dashboard/goals" />
         <StatCard label="Pending Follow-ups" value={fu.length} sub="action required" color="#F59E0B" icon={<Bell className="w-4 h-4" />} href="/dashboard/followups" />
       </div>
+
+      {/* ── Daily Tasks ── */}
+      <Card className="p-5 mb-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-gray-800 text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              Today&apos;s Tasks
+            </h3>
+            {dt.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600">
+                {dt.filter(t => t.checked).length}/{dt.length}
+              </span>
+            )}
+          </div>
+          <Link href="/dashboard/daily" className="flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors">
+            Open Daily <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        {dt.length === 0 ? (
+          <div className="flex items-center gap-3 py-4 text-center justify-center">
+            <CalendarCheck className="w-5 h-5 text-slate-300" />
+            <p className="text-sm text-slate-400">No tasks added for today yet.</p>
+            <Link href="/dashboard/daily" className="text-xs font-semibold text-indigo-500 hover:text-indigo-700">Add some →</Link>
+          </div>
+        ) : (
+          <>
+            {/* Progress bar */}
+            {(() => {
+              const dDone = dt.filter(t => t.checked).length
+              const dPct  = Math.round((dDone / dt.length) * 100)
+              return (
+                <div className="mb-4">
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${dPct}%`, backgroundColor: dPct === 100 ? '#10B981' : '#4F46E5' }}
+                    />
+                  </div>
+                </div>
+              )
+            })()}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {dt.map(task => {
+                const priColor = task.priority === 'high' ? '#EF4444' : task.priority === 'medium' ? '#F59E0B' : '#94A3B8'
+                return (
+                  <div key={task.id} className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-colors ${task.checked ? 'bg-slate-50 border-slate-100' : 'bg-white border-slate-200'}`}>
+                    {task.checked
+                      ? <CheckSquare className="w-4 h-4 text-green-500 shrink-0" />
+                      : <Square className="w-4 h-4 shrink-0" style={{ color: priColor }} />
+                    }
+                    <p className={`flex-1 text-sm font-medium line-clamp-1 ${task.checked ? 'line-through text-slate-400' : 'text-slate-700'}`}>
+                      {task.title}
+                    </p>
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: priColor }} />
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card className="p-5">
