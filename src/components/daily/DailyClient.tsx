@@ -171,7 +171,7 @@ export default function DailyClient({ initialTasks, userId }: {
   const [tasks, setTasks] = useState<DailyTask[]>(initialTasks)
   const [newTitle, setNewTitle] = useState('')
   const [newPriority, setNewPriority] = useState<DailyTask['priority']>('medium')
-  const [adding, setAdding] = useState(false)
+  const [completedOpen, setCompletedOpen] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Tasks for selected date
@@ -385,17 +385,21 @@ export default function DailyClient({ initialTasks, userId }: {
             />
           ))}
 
-          {/* Checked tasks — shown with separator */}
+          {/* Checked tasks — collapsible section */}
           {checked.length > 0 && (
             <>
-              {unchecked.length > 0 && (
-                <div className="flex items-center gap-2 py-1">
-                  <div className="flex-1 h-px bg-slate-100" />
-                  <span className="text-xs text-slate-300 font-medium">Completed</span>
-                  <div className="flex-1 h-px bg-slate-100" />
-                </div>
-              )}
-              {checked.map(task => (
+              <button
+                onClick={() => setCompletedOpen(v => !v)}
+                className="w-full flex items-center gap-2 py-1 group"
+              >
+                <div className="flex-1 h-px bg-slate-100" />
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 group-hover:text-slate-600 transition-colors px-1 shrink-0">
+                  {completedOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  {checked.length} completed
+                </span>
+                <div className="flex-1 h-px bg-slate-100" />
+              </button>
+              {completedOpen && checked.map(task => (
                 <TaskRow
                   key={task.id}
                   task={task}
