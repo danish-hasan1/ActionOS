@@ -172,6 +172,7 @@ export default function DailyClient({ initialTasks, userId }: {
   const [newTitle, setNewTitle] = useState('')
   const [newPriority, setNewPriority] = useState<DailyTask['priority']>('medium')
   const [completedOpen, setCompletedOpen] = useState(true)
+  const [adding, setAdding] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Tasks for selected date
