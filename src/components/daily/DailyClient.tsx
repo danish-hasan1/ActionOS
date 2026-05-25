@@ -288,6 +288,8 @@ export default function DailyClient({ initialTasks, userId }: {
   const [newPriority, setNewPriority] = useState<DailyTask['priority']>('medium')
   const [completedOpen, setCompletedOpen] = useState(true)
   const [adding, setAdding] = useState(false)
+  const [bulkCopying, setBulkCopying] = useState(false)
+  const [bulkDate, setBulkDate] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Tasks for selected date
@@ -357,6 +359,24 @@ export default function DailyClient({ initialTasks, userId }: {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, priority } : t))
     const { error } = await upsertDailyTask({ priority }, id)
     if (error) toast.error(error)
+  }
+
+  async function bulkCopyPending(toDate: string) {
+    if (!toDate || unchecked.length === 0) return
+    const existing = tasks.filter(t => t.date === toDate)
+    const { data, error } = await carryForwardTasks(
+      unchecked.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: existing.length + i })),
+      toDate,
+      userId
+    )
+    if (error) { toast.error(error) }
+    else {
+      setTasks(prev => [...prev, ...(data as DailyTask[])])
+      const label = toDate === toLocalISO(new Date()) ? 'today' : toDate
+      toast.success(`${unchecked.length} task${unchecked.length > 1 ? 's' : ''} copied to ${label}`)
+      setBulkCopying(false)
+      setBulkDate('')
+    }
   }
 
   async function copyTask(id: string, toDate: string) {
@@ -505,6 +525,46 @@ export default function DailyClient({ initialTasks, userId }: {
           </button>
         </div>
       </Card>
+
+      {/* ── Bulk copy pending ── */}
+      {unchecked.length > 0 && (
+        <div className="flex items-center gap-2">
+          {bulkCopying ? (
+            <>
+              <span className="text-xs font-semibold text-violet-600 shrink-0">Copy {unchecked.length} pending to:</span>
+              <input
+                type="date"
+                autoFocus
+                className="flex-1 px-3 py-1.5 rounded-xl border border-violet-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 bg-white text-slate-700"
+                value={bulkDate}
+                onChange={e => setBulkDate(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') bulkCopyPending(bulkDate); if (e.key === 'Escape') { setBulkCopying(false); setBulkDate('') } }}
+              />
+              <button
+                onClick={() => bulkCopyPending(bulkDate)}
+                disabled={!bulkDate}
+                className="px-3 py-1.5 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-xs font-bold transition-colors disabled:opacity-40 shrink-0"
+              >
+                Copy all
+              </button>
+              <button
+                onClick={() => { setBulkCopying(false); setBulkDate('') }}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors shrink-0"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setBulkCopying(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-violet-200 bg-violet-50 text-violet-600 text-xs font-semibold hover:bg-violet-100 transition-colors"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Copy all {unchecked.length} pending to another date
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── Task List ── */}
       {total === 0 ? (
