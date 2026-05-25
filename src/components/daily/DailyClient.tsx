@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { upsertDailyTask, deleteDailyTask, carryForwardTasks } from '@/lib/actions'
 import {
   ChevronLeft, ChevronRight, CheckSquare, Square, Trash2,
-  Plus, ChevronDown, ChevronUp, Flame, RotateCcw, CalendarCheck, Pencil, Check, X,
+  Plus, ChevronDown, ChevronUp, Flame, RotateCcw, CalendarCheck, Pencil, Check, X, Copy,
 } from 'lucide-react'
 import type { DailyTask } from '@/types'
 import { cn } from '@/lib/utils'
@@ -68,21 +68,38 @@ function calcStreak(tasks: DailyTask[], today: string): number {
 }
 
 // ─── Task Row ─────────────────────────────────────────────────
-function TaskRow({ task, onToggle, onDelete, onPriority, onNotesSave, onTitleSave }: {
+function TaskRow({ task, onToggle, onDelete, onPriority, onNotesSave, onTitleSave, onCopyTo }: {
   task: DailyTask
   onToggle: () => void
   onDelete: () => void
   onPriority: () => void
   onNotesSave: (notes: string) => void
   onTitleSave: (title: string) => void
+  onCopyTo: (date: string) => void
 }) {
   const [notesOpen, setNotesOpen] = useState(false)
   const [notesVal, setNotesVal] = useState(task.notes ?? '')
   const [noteSaving, setNoteSaving] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editVal, setEditVal] = useState(task.title)
+  const [copying, setCopying] = useState(false)
+  const [copyDate, setCopyDate] = useState('')
   const editRef = useRef<HTMLInputElement>(null)
+  const copyDateRef = useRef<HTMLInputElement>(null)
   const pri = PRIORITY_CONFIG[task.priority]
+
+  function startCopy() {
+    setCopyDate('')
+    setCopying(true)
+    setTimeout(() => copyDateRef.current?.showPicker?.(), 50)
+  }
+
+  function commitCopy() {
+    if (!copyDate) { setCopying(false); return }
+    onCopyTo(copyDate)
+    setCopying(false)
+    setCopyDate('')
+  }
 
   async function saveNotes() {
     if (notesVal === (task.notes ?? '')) return
@@ -175,6 +192,44 @@ function TaskRow({ task, onToggle, onDelete, onPriority, onNotesSave, onTitleSav
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
+
+            {/* Copy to date — only on unchecked tasks */}
+            {!task.checked && (
+              copying ? (
+                <div className="flex items-center gap-1 shrink-0">
+                  <input
+                    ref={copyDateRef}
+                    type="date"
+                    className="text-xs px-2 py-1 rounded-lg border border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white text-slate-700 w-32"
+                    value={copyDate}
+                    onChange={e => setCopyDate(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') commitCopy(); if (e.key === 'Escape') setCopying(false) }}
+                  />
+                  <button
+                    onClick={commitCopy}
+                    disabled={!copyDate}
+                    className="shrink-0 p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-40"
+                    title="Copy to this date"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setCopying(false)}
+                    className="shrink-0 p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={startCopy}
+                  className="shrink-0 p-1.5 text-slate-300 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors"
+                  title="Copy to another date"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              )
+            )}
 
             {/* Notes toggle */}
             <button
@@ -299,6 +354,28 @@ export default function DailyClient({ initialTasks, userId }: {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, priority } : t))
     const { error } = await upsertDailyTask({ priority }, id)
     if (error) toast.error(error)
+  }
+
+  async function copyTask(id: string, toDate: string) {
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
+    const existing = tasks.filter(t => t.date === toDate)
+    const payload = {
+      title: task.title,
+      date: toDate,
+      priority: task.priority,
+      notes: task.notes,
+      checked: false,
+      order_index: existing.length,
+      owner_id: userId,
+    }
+    const { data, error } = await upsertDailyTask(payload)
+    if (error) toast.error(error)
+    else {
+      setTasks(prev => [...prev, data as DailyTask])
+      const label = toDate === toLocalISO(new Date()) ? 'today' : toDate
+      toast.success(`Copied to ${label}`)
+    }
   }
 
   async function saveTitle(id: string, title: string) {
@@ -447,6 +524,7 @@ export default function DailyClient({ initialTasks, userId }: {
               onPriority={() => cyclePriority(task.id)}
               onNotesSave={notes => saveNotes(task.id, notes)}
               onTitleSave={title => saveTitle(task.id, title)}
+              onCopyTo={date => copyTask(task.id, date)}
             />
           ))}
 
@@ -473,6 +551,7 @@ export default function DailyClient({ initialTasks, userId }: {
                   onPriority={() => cyclePriority(task.id)}
                   onNotesSave={notes => saveNotes(task.id, notes)}
                   onTitleSave={title => saveTitle(task.id, title)}
+                  onCopyTo={date => copyTask(task.id, date)}
                 />
               ))}
             </>
