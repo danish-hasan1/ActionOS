@@ -200,22 +200,24 @@ function TaskRow({ task, onToggle, onDelete, onPriority, onNotesSave, onTitleSav
                   <input
                     ref={copyDateRef}
                     type="date"
-                    className="text-xs px-2 py-1 rounded-lg border border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white text-slate-700 w-32"
+                    className="text-xs px-2 py-1 rounded-lg border border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-300 bg-white text-slate-700 w-32"
                     value={copyDate}
                     onChange={e => setCopyDate(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') commitCopy(); if (e.key === 'Escape') setCopying(false) }}
+                    autoFocus
                   />
                   <button
                     onClick={commitCopy}
                     disabled={!copyDate}
                     className="shrink-0 p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-40"
-                    title="Copy to this date"
+                    title="Confirm copy"
                   >
                     <Check className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setCopying(false)}
                     className="shrink-0 p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                    title="Cancel"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -223,10 +225,11 @@ function TaskRow({ task, onToggle, onDelete, onPriority, onNotesSave, onTitleSav
               ) : (
                 <button
                   onClick={startCopy}
-                  className="shrink-0 p-1.5 text-slate-300 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors"
+                  className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-violet-500 bg-violet-50 hover:bg-violet-100 transition-colors border border-violet-200"
                   title="Copy to another date"
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="w-3 h-3" />
+                  Copy
                 </button>
               )
             )}
