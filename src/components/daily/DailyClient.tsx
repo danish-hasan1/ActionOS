@@ -369,14 +369,18 @@ export default function DailyClient({ initialTasks, userId }: {
       toDate,
       userId
     )
-    if (error) { toast.error(error) }
-    else {
-      setTasks(prev => [...prev, ...(data as DailyTask[])])
-      const label = toDate === toLocalISO(new Date()) ? 'today' : toDate
-      toast.success(`${unchecked.length} task${unchecked.length > 1 ? 's' : ''} copied to ${label}`)
-      setBulkCopying(false)
-      setBulkDate('')
-    }
+    if (error) { toast.error(error); return }
+
+    // Mark all originals as done on the source date
+    const ids = unchecked.map(t => t.id)
+    setTasks(prev => prev.map(t => ids.includes(t.id) ? { ...t, checked: true } : t))
+    await Promise.all(ids.map(id => upsertDailyTask({ checked: true }, id)))
+
+    setTasks(prev => [...prev, ...(data as DailyTask[])])
+    const label = toDate === toLocalISO(new Date()) ? 'today' : toDate
+    toast.success(`${unchecked.length} task${unchecked.length > 1 ? 's' : ''} rescheduled to ${label}`)
+    setBulkCopying(false)
+    setBulkDate('')
   }
 
   async function copyTask(id: string, toDate: string) {
@@ -393,12 +397,15 @@ export default function DailyClient({ initialTasks, userId }: {
       owner_id: userId,
     }
     const { data, error } = await upsertDailyTask(payload)
-    if (error) toast.error(error)
-    else {
-      setTasks(prev => [...prev, data as DailyTask])
-      const label = toDate === toLocalISO(new Date()) ? 'today' : toDate
-      toast.success(`Copied to ${label}`)
-    }
+    if (error) { toast.error(error); return }
+
+    // Mark original as done on source date
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, checked: true } : t))
+    await upsertDailyTask({ checked: true }, id)
+
+    setTasks(prev => [...prev, data as DailyTask])
+    const label = toDate === toLocalISO(new Date()) ? 'today' : toDate
+    toast.success(`Rescheduled to ${label}`)
   }
 
   async function saveTitle(id: string, title: string) {
