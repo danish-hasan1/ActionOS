@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, AlertTriangle, CheckSquare, Target,
-  Map, ClipboardList, Bell, FileText, Settings, Zap, Menu, X, CalendarCheck
+  Map, ClipboardList, Bell, FileText, Settings, Zap, Menu, X, CalendarCheck, Briefcase
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/agenda',      label: 'Agenda',      icon: ClipboardList },
   { href: '/dashboard/followups',   label: 'Follow-ups',  icon: Bell },
   { href: '/dashboard/reports',     label: 'Reports',     icon: FileText },
+  { href: '/dashboard/roles',       label: 'Roles',       icon: Briefcase },
   { href: '/dashboard/settings',    label: 'Settings',    icon: Settings },
 ]
 

@@ -244,6 +244,42 @@ export async function carryForwardTasks(
   return { data, error: null }
 }
 
+// ─── Roles ────────────────────────────────────────────────────
+export async function upsertRole(payload: Record<string, unknown>, id?: string): Promise<ActionResult> {
+  const db = createAdminClient()
+  const q = id
+    ? db.from('roles').update(payload).eq('id', id).select().single()
+    : db.from('roles').insert(payload).select().single()
+  const { data, error } = await q
+  if (error) return { data: null, error: error.message }
+  invalidate('/dashboard/roles')
+  return { data, error: null }
+}
+
+export async function deleteRole(id: string): Promise<ActionResult> {
+  const db = createAdminClient()
+  const { data, error } = await db.from('roles').delete().eq('id', id).select().single()
+  if (error) return { data: null, error: error.message }
+  invalidate('/dashboard/roles')
+  return { data, error: null }
+}
+
+export async function addRoleConversation(payload: Record<string, unknown>): Promise<ActionResult> {
+  const db = createAdminClient()
+  const { data, error } = await db.from('role_conversations').insert(payload).select().single()
+  if (error) return { data: null, error: error.message }
+  revalidatePath('/dashboard/roles')
+  return { data, error: null }
+}
+
+export async function deleteRoleConversation(id: string): Promise<ActionResult> {
+  const db = createAdminClient()
+  const { data, error } = await db.from('role_conversations').delete().eq('id', id).select().single()
+  if (error) return { data: null, error: error.message }
+  revalidatePath('/dashboard/roles')
+  return { data, error: null }
+}
+
 // ─── Quick Add ────────────────────────────────────────────────
 export async function quickInsert(table: string, payload: Record<string, unknown>): Promise<ActionResult> {
   const db = createAdminClient()

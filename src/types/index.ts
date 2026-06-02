@@ -1,3 +1,30 @@
+export type RoleStatus = 'open' | 'on_hold' | 'filled' | 'closed'
+
+export interface RoleConversation {
+  id: string
+  role_id: string
+  person_name: string
+  person_title: string | null
+  content: string
+  owner_id: string
+  created_at: string
+}
+
+export interface Role {
+  id: string
+  title: string
+  department: string | null
+  status: RoleStatus
+  priority: 'urgent' | 'high' | 'medium' | 'low'
+  description: string | null
+  requirements: string | null
+  notes: string | null
+  owner_id: string
+  created_at: string
+  updated_at: string
+  conversations?: RoleConversation[]
+}
+
 export type Severity = 'critical' | 'high' | 'medium' | 'low'
 export type PainPointStatus = 'open' | 'in_progress' | 'resolved'
 export type TaskStatus = 'todo' | 'in_progress' | 'done'

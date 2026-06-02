@@ -415,6 +415,42 @@ create policy "anon_all_reports"       on reports       for all to anon using (t
 create policy "anon_all_user_settings" on user_settings for all to anon using (true) with check (true);
 create policy "anon_all_daily_tasks"   on daily_tasks   for all to anon using (true) with check (true);
 
+-- ─── Roles & Conversations ────────────────────────────────────
+create table if not exists roles (
+  id           uuid primary key default uuid_generate_v4(),
+  title        text not null,
+  department   text,
+  status       text not null default 'open'
+                 check (status in ('open','on_hold','filled','closed')),
+  priority     text not null default 'medium'
+                 check (priority in ('urgent','high','medium','low')),
+  description  text,
+  requirements text,
+  notes        text,
+  owner_id     uuid,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+
+create table if not exists role_conversations (
+  id           uuid primary key default uuid_generate_v4(),
+  role_id      uuid references roles(id) on delete cascade,
+  person_name  text not null,
+  person_title text,
+  content      text not null,
+  owner_id     uuid,
+  created_at   timestamptz default now()
+);
+
+alter table roles              enable row level security;
+alter table role_conversations enable row level security;
+
+drop policy if exists "anon_all_roles"               on roles;
+drop policy if exists "anon_all_role_conversations"  on role_conversations;
+
+create policy "anon_all_roles"              on roles              for all to anon using (true) with check (true);
+create policy "anon_all_role_conversations" on role_conversations for all to anon using (true) with check (true);
+
 -- ═══════════════════════════════════════════════════════════════
 -- SEED OWNER: Insert a fixed owner row so the app works
 -- immediately without needing to create a user.
