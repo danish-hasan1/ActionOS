@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 import { upsertRole, deleteRole, addRoleConversation, deleteRoleConversation } from '@/lib/actions'
 import {
   Plus, Search, Briefcase, Trash2, Pencil, MessageSquare,
-  X, ChevronDown, Users, Calendar,
+  X, Calendar, UserPlus, ChevronDown,
 } from 'lucide-react'
 import type { Role, RoleConversation, RoleStatus } from '@/types'
 import { Button, Card, Modal, FormField, inputCls, selectCls, textareaCls } from '@/components/ui'
@@ -28,6 +28,10 @@ const PRIORITY_CONFIG = {
 
 const DEPARTMENTS = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Legal', 'Other']
 
+// ─── Types ────────────────────────────────────────────────────
+interface PersonEntry { name: string; title: string }
+interface KnownPerson { name: string; title: string }
+
 // ─── Helpers ─────────────────────────────────────────────────
 function avatarColor(name: string) {
   const palette = ['#6366F1', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6', '#EF4444', '#14B8A6', '#F97316', '#06B6D4']
@@ -48,6 +52,99 @@ function fmtDateTime(iso: string) {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// ─── Person Name Input w/ Autocomplete ───────────────────────
+function PersonNameInput({ value, titleValue, onChangeName, onChangeTitle, onRemove, showRemove, knownPeople, autoFocus }: {
+  value: string
+  titleValue: string
+  onChangeName: (v: string) => void
+  onChangeTitle: (v: string) => void
+  onRemove: () => void
+  showRemove: boolean
+  knownPeople: KnownPerson[]
+  autoFocus?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const suggestions = useMemo(() => {
+    if (!value.trim()) return []
+    const q = value.toLowerCase()
+    return knownPeople.filter(p => p.name.toLowerCase().includes(q) && p.name.toLowerCase() !== q)
+  }, [value, knownPeople])
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  function pick(p: KnownPerson) {
+    onChangeName(p.name)
+    onChangeTitle(p.title)
+    setOpen(false)
+  }
+
+  return (
+    <div className="flex gap-2 items-start">
+      <div className="flex-1 grid grid-cols-2 gap-2">
+        {/* Name with autocomplete */}
+        <div className="relative" ref={containerRef}>
+          <input
+            className={inputCls}
+            placeholder="Person name *"
+            value={value}
+            autoFocus={autoFocus}
+            onChange={e => { onChangeName(e.target.value); setOpen(true) }}
+            onFocus={() => setOpen(true)}
+          />
+          {open && suggestions.length > 0 && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+              {suggestions.slice(0, 6).map(p => (
+                <button
+                  key={p.name}
+                  type="button"
+                  onMouseDown={() => pick(p)}
+                  className="w-full text-left px-3 py-2.5 text-sm hover:bg-indigo-50 flex items-center gap-2 border-b border-slate-50 last:border-0"
+                >
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                    style={{ backgroundColor: avatarColor(p.name) }}
+                  >
+                    {initials(p.name)}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">{p.name}</span>
+                    {p.title && <span className="text-slate-400 ml-1.5 text-xs">· {p.title}</span>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* Title */}
+        <input
+          className={inputCls}
+          placeholder="Their role / title"
+          value={titleValue}
+          onChange={e => onChangeTitle(e.target.value)}
+        />
+      </div>
+      {showRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="mt-2.5 p-1.5 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  )
 }
 
 // ─── Role Modal ───────────────────────────────────────────────
@@ -157,7 +254,6 @@ function ConversationBubble({ conv, onDelete }: { conv: RoleConversation; onDele
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Avatar */}
       <div
         className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5 shadow-sm"
         style={{ backgroundColor: color }}
@@ -165,7 +261,6 @@ function ConversationBubble({ conv, onDelete }: { conv: RoleConversation; onDele
         {initials(conv.person_name)}
       </div>
 
-      {/* Bubble */}
       <div className="flex-1 min-w-0">
         <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between gap-2 mb-2">
@@ -194,54 +289,85 @@ function ConversationBubble({ conv, onDelete }: { conv: RoleConversation; onDele
 }
 
 // ─── Add Conversation Form ────────────────────────────────────
-function AddConversationForm({ roleId, userId, onAdded }: {
+function AddConversationForm({ roleId, userId, knownPeople, onAdded }: {
   roleId: string
   userId: string
-  onAdded: (c: RoleConversation) => void
+  knownPeople: KnownPerson[]
+  onAdded: (convs: RoleConversation[]) => void
 }) {
-  const [personName, setPersonName] = useState('')
-  const [personTitle, setPersonTitle] = useState('')
+  const emptyPerson = (): PersonEntry => ({ name: '', title: '' })
+  const [people, setPeople] = useState<PersonEntry[]>([emptyPerson()])
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
 
+  function updatePerson(i: number, field: keyof PersonEntry, value: string) {
+    setPeople(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: value } : p))
+  }
+
+  function addPerson() {
+    setPeople(prev => [...prev, emptyPerson()])
+  }
+
+  function removePerson(i: number) {
+    setPeople(prev => prev.filter((_, idx) => idx !== i))
+  }
+
   async function submit() {
-    if (!personName.trim() || !content.trim()) return toast.error('Person name and note are required')
+    const valid = people.filter(p => p.name.trim())
+    if (!valid.length) return toast.error('At least one person name is required')
+    if (!content.trim()) return toast.error('Note content is required')
     setLoading(true)
-    const { data, error } = await addRoleConversation({
-      role_id: roleId,
-      person_name: personName.trim(),
-      person_title: personTitle.trim() || null,
-      content: content.trim(),
-      owner_id: userId,
-    })
-    if (error) toast.error(error)
-    else {
-      onAdded(data as RoleConversation)
-      setPersonName('')
-      setPersonTitle('')
-      setContent('')
-      toast.success('Conversation saved')
+
+    const saved: RoleConversation[] = []
+    for (const p of valid) {
+      const { data, error } = await addRoleConversation({
+        role_id: roleId,
+        person_name: p.name.trim(),
+        person_title: p.title.trim() || null,
+        content: content.trim(),
+        owner_id: userId,
+      })
+      if (error) { toast.error(error); setLoading(false); return }
+      saved.push(data as RoleConversation)
     }
+
+    onAdded(saved)
+    setPeople([emptyPerson()])
+    setContent('')
+    toast.success(saved.length > 1 ? `${saved.length} conversations saved` : 'Conversation saved')
     setLoading(false)
   }
 
   return (
     <div className="border-t border-slate-100 pt-5 mt-5 space-y-3">
-      <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Add Conversation</p>
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          className={inputCls}
-          placeholder="Person name *"
-          value={personName}
-          onChange={e => setPersonName(e.target.value)}
-        />
-        <input
-          className={inputCls}
-          placeholder="Their role / title"
-          value={personTitle}
-          onChange={e => setPersonTitle(e.target.value)}
-        />
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Add Conversation</p>
+        <button
+          type="button"
+          onClick={addPerson}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors"
+        >
+          <UserPlus className="w-3.5 h-3.5" />
+          Add person
+        </button>
       </div>
+
+      <div className="space-y-2">
+        {people.map((p, i) => (
+          <PersonNameInput
+            key={i}
+            value={p.name}
+            titleValue={p.title}
+            onChangeName={v => updatePerson(i, 'name', v)}
+            onChangeTitle={v => updatePerson(i, 'title', v)}
+            onRemove={() => removePerson(i)}
+            showRemove={people.length > 1}
+            knownPeople={knownPeople}
+            autoFocus={i === 0}
+          />
+        ))}
+      </div>
+
       <textarea
         className={textareaCls}
         rows={3}
@@ -252,9 +378,15 @@ function AddConversationForm({ roleId, userId, onAdded }: {
       />
       <div className="flex items-center justify-between">
         <p className="text-xs text-slate-400">⌘ + Enter to save</p>
-        <Button onClick={submit} disabled={loading || !personName.trim() || !content.trim()} size="sm">
+        <Button
+          onClick={submit}
+          disabled={loading || !people.some(p => p.name.trim()) || !content.trim()}
+          size="sm"
+        >
           <MessageSquare className="w-3.5 h-3.5" />
-          {loading ? 'Saving...' : 'Save Note'}
+          {loading ? 'Saving...' : people.filter(p => p.name.trim()).length > 1
+            ? `Save ${people.filter(p => p.name.trim()).length} notes`
+            : 'Save Note'}
         </Button>
       </div>
     </div>
@@ -262,12 +394,13 @@ function AddConversationForm({ roleId, userId, onAdded }: {
 }
 
 // ─── Role Detail Panel ────────────────────────────────────────
-function RoleDetail({ role, conversations, onEdit, onDelete, onConversationAdded, onConversationDeleted, userId }: {
+function RoleDetail({ role, conversations, allConversations, onEdit, onDelete, onConversationAdded, onConversationDeleted, userId }: {
   role: Role
   conversations: RoleConversation[]
+  allConversations: RoleConversation[]
   onEdit: () => void
   onDelete: () => void
-  onConversationAdded: (c: RoleConversation) => void
+  onConversationAdded: (convs: RoleConversation[]) => void
   onConversationDeleted: (id: string) => void
   userId: string
 }) {
@@ -275,6 +408,15 @@ function RoleDetail({ role, conversations, onEdit, onDelete, onConversationAdded
   const pr = PRIORITY_CONFIG[role.priority]
   const roleConvs = conversations.filter(c => c.role_id === role.id)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  // Derive known people from ALL conversations across all roles
+  const knownPeople = useMemo<KnownPerson[]>(() => {
+    const map = new Map<string, string>()
+    allConversations.forEach(c => {
+      if (!map.has(c.person_name)) map.set(c.person_name, c.person_title ?? '')
+    })
+    return Array.from(map.entries()).map(([name, title]) => ({ name, title }))
+  }, [allConversations])
 
   async function handleDeleteConv(id: string) {
     const { error } = await deleteRoleConversation(id)
@@ -320,11 +462,30 @@ function RoleDetail({ role, conversations, onEdit, onDelete, onConversationAdded
             <MessageSquare className="w-3 h-3" /> {roleConvs.length} note{roleConvs.length !== 1 ? 's' : ''}
           </span>
         </div>
+
+        {/* Unique people who have been spoken to */}
+        {roleConvs.length > 0 && (() => {
+          const uniqueNames = Array.from(new Set(roleConvs.map(c => c.person_name)))
+          return (
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+              {uniqueNames.map(name => (
+                <div key={name} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full">
+                  <div
+                    className="w-4 h-4 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+                    style={{ backgroundColor: avatarColor(name), fontSize: 8 }}
+                  >
+                    {initials(name)}
+                  </div>
+                  <span className="text-xs text-slate-600 font-medium">{name}</span>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto p-6 space-y-5">
-        {/* Info sections */}
         {(role.description || role.requirements || role.notes) && (
           <div className="space-y-4">
             {role.description && (
@@ -349,7 +510,6 @@ function RoleDetail({ role, conversations, onEdit, onDelete, onConversationAdded
           </div>
         )}
 
-        {/* Conversations */}
         <div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4 flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" /> Conversations & Notes
@@ -372,17 +532,22 @@ function RoleDetail({ role, conversations, onEdit, onDelete, onConversationAdded
           )}
         </div>
 
-        {/* Add conversation */}
-        <AddConversationForm roleId={role.id} userId={userId} onAdded={onConversationAdded} />
+        <AddConversationForm
+          roleId={role.id}
+          userId={userId}
+          knownPeople={knownPeople}
+          onAdded={convs => onConversationAdded(convs)}
+        />
       </div>
     </div>
   )
 }
 
 // ─── Role Card (sidebar) ──────────────────────────────────────
-function RoleCard({ role, convCount, active, onClick }: {
+function RoleCard({ role, convCount, uniquePeople, active, onClick }: {
   role: Role
   convCount: number
+  uniquePeople: string[]
   active: boolean
   onClick: () => void
 }) {
@@ -418,6 +583,24 @@ function RoleCard({ role, convCount, active, onClick }: {
           </span>
         )}
       </div>
+      {/* People chips */}
+      {uniquePeople.length > 0 && (
+        <div className="flex items-center gap-1 mt-2.5 flex-wrap">
+          {uniquePeople.slice(0, 3).map(name => (
+            <div
+              key={name}
+              className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-sm"
+              style={{ backgroundColor: avatarColor(name), fontSize: 8 }}
+              title={name}
+            >
+              {initials(name)}
+            </div>
+          ))}
+          {uniquePeople.length > 3 && (
+            <span className="text-xs text-slate-400 ml-0.5">+{uniquePeople.length - 3}</span>
+          )}
+        </div>
+      )}
     </button>
   )
 }
@@ -437,7 +620,6 @@ export default function RolesClient({ initialRoles, initialConversations, userId
 
   const selectedRole = roles.find(r => r.id === selectedId) ?? null
 
-  // Filter roles: by search (person name in conversations OR role title)
   const filteredRoles = search.trim()
     ? roles.filter(r => {
         const q = search.toLowerCase()
@@ -473,7 +655,6 @@ export default function RolesClient({ initialRoles, initialConversations, userId
 
         {/* ── Left: Role list ── */}
         <div className="flex flex-col gap-3 lg:overflow-y-auto">
-          {/* Search + New */}
           <div className="flex gap-2 sticky top-0 bg-[#F5F6FA] pb-1 z-10">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -501,15 +682,20 @@ export default function RolesClient({ initialRoles, initialConversations, userId
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredRoles.map(r => (
-                <RoleCard
-                  key={r.id}
-                  role={r}
-                  convCount={conversations.filter(c => c.role_id === r.id).length}
-                  active={r.id === selectedId}
-                  onClick={() => setSelectedId(r.id)}
-                />
-              ))}
+              {filteredRoles.map(r => {
+                const roleConvs = conversations.filter(c => c.role_id === r.id)
+                const uniquePeople = Array.from(new Set(roleConvs.map(c => c.person_name)))
+                return (
+                  <RoleCard
+                    key={r.id}
+                    role={r}
+                    convCount={roleConvs.length}
+                    uniquePeople={uniquePeople}
+                    active={r.id === selectedId}
+                    onClick={() => setSelectedId(r.id)}
+                  />
+                )
+              })}
             </div>
           )}
         </div>
@@ -521,9 +707,10 @@ export default function RolesClient({ initialRoles, initialConversations, userId
               <RoleDetail
                 role={selectedRole}
                 conversations={conversations}
+                allConversations={conversations}
                 onEdit={() => openEdit(selectedRole)}
                 onDelete={() => handleDelete(selectedRole.id)}
-                onConversationAdded={c => setConversations(prev => [c, ...prev])}
+                onConversationAdded={convs => setConversations(prev => [...convs, ...prev])}
                 onConversationDeleted={id => setConversations(prev => prev.filter(c => c.id !== id))}
                 userId={userId}
               />
