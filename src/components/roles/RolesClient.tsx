@@ -148,13 +148,16 @@ function PersonNameInput({ value, titleValue, onChangeName, onChangeTitle, onRem
 }
 
 // ─── Role Modal ───────────────────────────────────────────────
-function RoleModal({ open, onClose, userId, editing, onSaved }: {
+function RoleModal({ open, onClose, userId, editing, knownPeople, onSaved, onConversationsSaved }: {
   open: boolean
   onClose: () => void
   userId: string
   editing?: Role | null
+  knownPeople: KnownPerson[]
   onSaved: (r: Role) => void
+  onConversationsSaved: (convs: RoleConversation[]) => void
 }) {
+  const emptyPerson = (): PersonEntry => ({ name: '', title: '' })
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: editing?.title ?? '',
@@ -165,9 +168,14 @@ function RoleModal({ open, onClose, userId, editing, onSaved }: {
     requirements: editing?.requirements ?? '',
     notes: editing?.notes ?? '',
   })
+  const [people, setPeople] = useState<PersonEntry[]>([emptyPerson()])
 
   function set<K extends keyof typeof form>(k: K, v: typeof form[K]) {
     setForm(f => ({ ...f, [k]: v }))
+  }
+
+  function updatePerson(i: number, field: keyof PersonEntry, value: string) {
+    setPeople(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: value } : p))
   }
 
   async function save() {
@@ -184,8 +192,27 @@ function RoleModal({ open, onClose, userId, editing, onSaved }: {
       owner_id: userId,
     }
     const { data, error } = await upsertRole(payload, editing?.id)
-    if (error) toast.error(error)
-    else { toast.success(editing ? 'Role updated' : 'Role created'); onSaved(data as Role); onClose() }
+    if (error) { toast.error(error); setLoading(false); return }
+
+    const role = data as Role
+    // Save any people entered as conversation stubs (name-only, no content = just a contact record)
+    const validPeople = people.filter(p => p.name.trim())
+    const saved: RoleConversation[] = []
+    for (const p of validPeople) {
+      const { data: cd, error: ce } = await addRoleConversation({
+        role_id: role.id,
+        person_name: p.name.trim(),
+        person_title: p.title.trim() || null,
+        content: '—',
+        owner_id: userId,
+      })
+      if (!ce) saved.push(cd as RoleConversation)
+    }
+    if (saved.length) onConversationsSaved(saved)
+
+    toast.success(editing ? 'Role updated' : 'Role created')
+    onSaved(role)
+    onClose()
     setLoading(false)
   }
 
@@ -225,11 +252,41 @@ function RoleModal({ open, onClose, userId, editing, onSaved }: {
             ))}
           </div>
         </FormField>
+
+        {/* People spoken to */}
+        <div className="border border-slate-200 rounded-xl p-3 space-y-2 bg-slate-50">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Who did you speak to?</p>
+            <button
+              type="button"
+              onClick={() => setPeople(prev => [...prev, emptyPerson()])}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors"
+            >
+              <UserPlus className="w-3.5 h-3.5" /> Add person
+            </button>
+          </div>
+          <div className="space-y-2">
+            {people.map((p, i) => (
+              <PersonNameInput
+                key={i}
+                value={p.name}
+                titleValue={p.title}
+                onChangeName={v => updatePerson(i, 'name', v)}
+                onChangeTitle={v => updatePerson(i, 'title', v)}
+                onRemove={() => setPeople(prev => prev.filter((_, idx) => idx !== i))}
+                showRemove={people.length > 1}
+                knownPeople={knownPeople}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-slate-400">Optional — you can add conversation notes after saving</p>
+        </div>
+
         <FormField label="Description">
-          <textarea className={textareaCls} rows={3} value={form.description} onChange={e => set('description', e.target.value)} placeholder="What is this role responsible for?" />
+          <textarea className={textareaCls} rows={2} value={form.description} onChange={e => set('description', e.target.value)} placeholder="What is this role responsible for?" />
         </FormField>
         <FormField label="Requirements">
-          <textarea className={textareaCls} rows={3} value={form.requirements} onChange={e => set('requirements', e.target.value)} placeholder="Must-have skills, experience, qualifications..." />
+          <textarea className={textareaCls} rows={2} value={form.requirements} onChange={e => set('requirements', e.target.value)} placeholder="Must-have skills, experience, qualifications..." />
         </FormField>
         <FormField label="Notes">
           <textarea className={textareaCls} rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Internal notes, sourcing strategy, compensation..." />
@@ -629,6 +686,14 @@ export default function RolesClient({ initialRoles, initialConversations, userId
       })
     : roles
 
+  const knownPeople = useMemo<KnownPerson[]>(() => {
+    const map = new Map<string, string>()
+    conversations.forEach(c => {
+      if (!map.has(c.person_name)) map.set(c.person_name, c.person_title ?? '')
+    })
+    return Array.from(map.entries()).map(([name, title]) => ({ name, title }))
+  }, [conversations])
+
   function openAdd() { setEditing(null); setModalOpen(true) }
   function openEdit(r: Role) { setEditing(r); setModalOpen(true) }
 
@@ -733,7 +798,9 @@ export default function RolesClient({ initialRoles, initialConversations, userId
         onClose={() => setModalOpen(false)}
         userId={userId}
         editing={editing}
+        knownPeople={knownPeople}
         onSaved={handleSaved}
+        onConversationsSaved={convs => setConversations(prev => [...convs, ...prev])}
       />
     </>
   )
