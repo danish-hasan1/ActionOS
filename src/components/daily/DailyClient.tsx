@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 import { upsertDailyTask, deleteDailyTask, carryForwardTasks } from '@/lib/actions'
 import {
   ChevronLeft, ChevronRight, CheckSquare, Square, Trash2,
-  Plus, ChevronDown, ChevronUp, Flame, RotateCcw, CalendarCheck, Pencil, Check, X, Copy,
+  Plus, ChevronDown, ChevronUp, Flame, RotateCcw, CalendarCheck, Pencil, Check, X, Copy, ArrowDownToLine,
 } from 'lucide-react'
 import type { DailyTask } from '@/types'
 import { cn } from '@/lib/utils'
@@ -290,6 +290,7 @@ export default function DailyClient({ initialTasks, userId }: {
   const [adding, setAdding] = useState(false)
   const [bulkCopying, setBulkCopying] = useState(false)
   const [bulkDate, setBulkDate] = useState('')
+  const [showPullPanel, setShowPullPanel] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Tasks for selected date
@@ -440,9 +441,44 @@ export default function DailyClient({ initialTasks, userId }: {
     )
     if (error) { toast.error(error) }
     else {
+      // Mark originals as done so they don't re-appear
+      const ids = yesterdayUncompleted.map(t => t.id)
+      setTasks(prev => prev.map(t => ids.includes(t.id) ? { ...t, checked: true } : t))
+      await Promise.all(ids.map(id => upsertDailyTask({ checked: true }, id)))
       setTasks(prev => [...prev, ...(data as DailyTask[])])
       toast.success(`${yesterdayUncompleted.length} task${yesterdayUncompleted.length > 1 ? 's' : ''} carried forward`)
     }
+  }
+
+  // Past dates (before selectedDate) with unchecked tasks
+  const pastPendingByDate = useMemo(() => {
+    const map: Record<string, DailyTask[]> = {}
+    tasks.forEach(t => {
+      if (!t.checked && t.date < selectedDate) {
+        if (!map[t.date]) map[t.date] = []
+        map[t.date].push(t)
+      }
+    })
+    return Object.entries(map).sort(([a], [b]) => b.localeCompare(a))
+  }, [tasks, selectedDate])
+
+  async function pullFromDate(fromDate: string) {
+    const pending = tasks.filter(t => t.date === fromDate && !t.checked)
+    if (!pending.length) return
+    const existing = tasks.filter(t => t.date === selectedDate)
+    const { data, error } = await carryForwardTasks(
+      pending.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: existing.length + i })),
+      selectedDate,
+      userId
+    )
+    if (error) { toast.error(error); return }
+    // Mark originals as done
+    const ids = pending.map(t => t.id)
+    setTasks(prev => prev.map(t => ids.includes(t.id) ? { ...t, checked: true } : t))
+    await Promise.all(ids.map(id => upsertDailyTask({ checked: true }, id)))
+    setTasks(prev => [...prev, ...(data as DailyTask[])])
+    toast.success(`${pending.length} task${pending.length > 1 ? 's' : ''} pulled from ${formatDisplayDate(fromDate)}`)
+    setShowPullPanel(false)
   }
 
   // Keep today tasks sorted: unchecked first, then checked
@@ -629,29 +665,58 @@ export default function DailyClient({ initialTasks, userId }: {
         </div>
       )}
 
-      {/* ── Carry Forward ── */}
-      {yesterdayUncompleted.length > 0 && selectedDate === today && (
-        <Card className="p-4 border-amber-200 bg-amber-50">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <RotateCcw className="w-4 h-4 text-amber-500 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-amber-800">
-                  {yesterdayUncompleted.length} unfinished {yesterdayUncompleted.length === 1 ? 'task' : 'tasks'} from yesterday
-                </p>
-                <p className="text-xs text-amber-600 mt-0.5">
-                  {yesterdayUncompleted.map(t => t.title).join(' · ')}
-                </p>
-              </div>
-            </div>
+      {/* ── Pull old pending tasks ── */}
+      {pastPendingByDate.length > 0 && (
+        <div>
+          {!showPullPanel ? (
             <button
-              onClick={handleCarryForward}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors shrink-0"
+              onClick={() => setShowPullPanel(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100 transition-colors"
             >
-              Copy to Today
+              <ArrowDownToLine className="w-3.5 h-3.5" />
+              Pull pending from past ({pastPendingByDate.reduce((s, [, ts]) => s + ts.length, 0)} tasks across {pastPendingByDate.length} {pastPendingByDate.length === 1 ? 'day' : 'days'})
             </button>
-          </div>
-        </Card>
+          ) : (
+            <Card className="p-4 border-amber-200 bg-amber-50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ArrowDownToLine className="w-4 h-4 text-amber-600" />
+                  <p className="text-sm font-bold text-amber-800">Pull pending tasks to {formatDisplayDate(selectedDate)}</p>
+                </div>
+                <button
+                  onClick={() => setShowPullPanel(false)}
+                  className="p-1 text-amber-400 hover:text-amber-700 hover:bg-amber-100 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {pastPendingByDate.map(([date, pending]) => (
+                  <div key={date} className="flex items-center justify-between gap-3 bg-white rounded-xl px-3 py-2.5 border border-amber-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-600">
+                        {formatDisplayDate(date)}
+                        <span className="ml-1.5 font-normal text-slate-400">· {date}</span>
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5 truncate">
+                        {pending.slice(0, 3).map(t => t.title).join(' · ')}{pending.length > 3 ? ` +${pending.length - 3} more` : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => pullFromDate(date)}
+                      className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors"
+                    >
+                      <ArrowDownToLine className="w-3 h-3" />
+                      Pull {pending.length}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-amber-600">Pulled tasks are added here; originals are marked done.</p>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* ── Stats ── */}
