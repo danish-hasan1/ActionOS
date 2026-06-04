@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
+export { default as ShareButton } from './ShareButton'
+
 // ─── Badge ────────────────────────────────────────────────────
 interface BadgeProps {
   label: string

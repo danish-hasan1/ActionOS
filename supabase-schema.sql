@@ -451,6 +451,22 @@ drop policy if exists "anon_all_role_conversations"  on role_conversations;
 create policy "anon_all_roles"              on roles              for all to anon using (true) with check (true);
 create policy "anon_all_role_conversations" on role_conversations for all to anon using (true) with check (true);
 
+-- ─── App Users (multi-user login) ────────────────────────────
+create table if not exists app_users (
+  id         uuid primary key default uuid_generate_v4(),
+  name       text not null,
+  pin        text not null,
+  created_at timestamptz default now()
+);
+alter table app_users enable row level security;
+drop policy if exists "anon_all_app_users" on app_users;
+create policy "anon_all_app_users" on app_users for all to anon using (true) with check (true);
+
+-- Seed the existing default owner as "Owner" with PIN 0000
+insert into app_users (id, name, pin)
+values ('00000000-0000-0000-0000-000000000001', 'Owner', '0000')
+on conflict (id) do nothing;
+
 -- ═══════════════════════════════════════════════════════════════
 -- SEED OWNER: Insert a fixed owner row so the app works
 -- immediately without needing to create a user.

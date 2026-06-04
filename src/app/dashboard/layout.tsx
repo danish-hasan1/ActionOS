@@ -1,18 +1,20 @@
-import { createClient } from '@/lib/supabase/server'
-import { OWNER_ID } from '@/lib/owner'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requireUserId } from '@/lib/session'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import MobileSidebar from '@/components/layout/MobileSidebar'
 import QuickAdd from '@/components/ui/QuickAdd'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
+  const userId = await requireUserId()
+  const db = createAdminClient()
 
-  const { data: settings } = await supabase
-    .from('user_settings')
-    .select('start_date, display_name')
-    .eq('owner_id', OWNER_ID)
-    .single()
+  const [{ data: settings }, { data: appUser }] = await Promise.all([
+    db.from('user_settings').select('start_date, display_name').eq('owner_id', userId).single(),
+    db.from('app_users').select('name').eq('id', userId).single(),
+  ])
+
+  const userName = appUser?.name ?? settings?.display_name ?? null
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F5F6FA]">
@@ -27,10 +29,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <span className="text-sm font-bold text-gray-900" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>ActionPlan OS</span>
           </div>
           <div className="hidden md:block w-full">
-            <TopBar displayName={settings?.display_name} />
+            <TopBar displayName={settings?.display_name} userName={userName} />
           </div>
           <div className="md:hidden">
-            <TopBar displayName={settings?.display_name} mobileOnly />
+            <TopBar displayName={settings?.display_name} userName={userName} mobileOnly />
           </div>
         </header>
 
@@ -39,7 +41,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </main>
       </div>
 
-      <QuickAdd userId={OWNER_ID} />
+      <QuickAdd userId={userId} />
     </div>
   )
 }

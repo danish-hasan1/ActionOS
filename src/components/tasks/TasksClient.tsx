@@ -7,7 +7,7 @@ import { Plus, Search, CheckSquare, LayoutGrid, List, Pencil, Trash2, Calendar, 
 import type { Task, TaskStatus, Priority, Phase } from '@/types'
 import {
   Badge, EmptyState, Button, Modal, FormField,
-  inputCls, selectCls, textareaCls, Card, PageHeader
+  inputCls, selectCls, textareaCls, Card, PageHeader, ShareButton
 } from '@/components/ui'
 import { TASK_STATUS_CONFIG, PRIORITY_CONFIG, PHASE_CONFIG, formatDate, cn } from '@/lib/utils'
 
@@ -135,12 +135,13 @@ function TaskModal({
 }
 
 // ─── Task Card (shared between list + kanban) ─────────────────
-function TaskCard({ task, onEdit, onDelete, onStatusChange, compact = false }: {
+function TaskCard({ task, onEdit, onDelete, onStatusChange, compact = false, userId }: {
   task: Task
   onEdit: (_t: Task) => void
   onDelete: (id: string) => void
   onStatusChange: (_id: string, _s: TaskStatus) => void
   compact?: boolean
+  userId: string
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const pri = PRIORITY_CONFIG[task.priority]
@@ -195,10 +196,11 @@ function TaskCard({ task, onEdit, onDelete, onStatusChange, compact = false }: {
           </div>
         </div>
 
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+          <ShareButton table="tasks" itemId={task.id} currentUserId={userId} />
           <button
             onClick={() => setMenuOpen(v => !v)}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400 opacity-0 group-hover:opacity-100 transition-all"
+            className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400 transition-all"
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
@@ -237,12 +239,13 @@ const KANBAN_COLS: { status: TaskStatus; label: string; color: string; bg: strin
   { status: 'done', label: 'Done', color: 'text-green-600', bg: 'bg-green-50' },
 ]
 
-function KanbanView({ tasks, onEdit, onDelete, onStatusChange, onAdd }: {
+function KanbanView({ tasks, onEdit, onDelete, onStatusChange, onAdd, userId }: {
   tasks: Task[]
   onEdit: (_t: Task) => void
   onDelete: (id: string) => void
   onStatusChange: (id: string, s: TaskStatus) => void
   onAdd: () => void
+  userId: string
 }) {
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -256,7 +259,7 @@ function KanbanView({ tasks, onEdit, onDelete, onStatusChange, onAdd }: {
             </div>
             <div className="flex flex-col gap-2 min-h-[120px]">
               {colTasks.map(t => (
-                <TaskCard key={t.id} task={t} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} compact />
+                <TaskCard key={t.id} task={t} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} compact userId={userId} />
               ))}
               {colTasks.length === 0 && (
                 <div className="flex items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200">
@@ -397,11 +400,11 @@ export default function TasksClient({ initialTasks, painPoints, goals, userId }:
           action={tasks.length === 0 ? <Button onClick={openAdd}><Plus className="w-4 h-4" /> Create First Task</Button> : undefined}
         />
       ) : view === 'kanban' ? (
-        <KanbanView tasks={filtered} onEdit={openEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} onAdd={openAdd} />
+        <KanbanView tasks={filtered} onEdit={openEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} onAdd={openAdd} userId={userId} />
       ) : (
         <div className="space-y-2">
           {filtered.map(t => (
-            <TaskCard key={t.id} task={t} onEdit={openEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} />
+            <TaskCard key={t.id} task={t} onEdit={openEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} userId={userId} />
           ))}
         </div>
       )}

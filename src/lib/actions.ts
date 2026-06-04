@@ -289,3 +289,19 @@ export async function quickInsert(table: string, payload: Record<string, unknown
   revalidatePath(`/dashboard/${table === 'pain_points' ? 'pain-points' : table + 's'}`)
   return { data, error: null }
 }
+
+// ─── Share ────────────────────────────────────────────────────
+export async function shareItemWithUser(
+  table: string,
+  itemId: string,
+  targetUserId: string
+): Promise<ActionResult> {
+  const db = createAdminClient()
+  const { data: item, error: fetchError } = await db.from(table).select('*').eq('id', itemId).single()
+  if (fetchError) return { data: null, error: fetchError.message }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id: _id, created_at: _ca, updated_at: _ua, ...rest } = item as Record<string, unknown>
+  const { data, error } = await db.from(table).insert({ ...rest, owner_id: targetUserId }).select().single()
+  if (error) return { data: null, error: error.message }
+  return { data, error: null }
+}

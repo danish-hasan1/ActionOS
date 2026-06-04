@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { OWNER_ID } from '@/lib/owner'
+import { requireUserId } from '@/lib/session'
 import { AlertTriangle, CheckSquare, Target, Bell, ArrowRight, CalendarCheck, Square } from 'lucide-react'
 import { StatCard, Card, ProgressBar, Badge } from '@/components/ui'
 import { SEVERITY_CONFIG, PHASE_CONFIG } from '@/lib/utils'
@@ -8,6 +8,7 @@ import { SEVERITY_CONFIG, PHASE_CONFIG } from '@/lib/utils'
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
+  const userId = await requireUserId()
   const supabase = await createClient()
 
   const today = new Date()
@@ -21,12 +22,12 @@ export default async function DashboardPage() {
     { data: settings },
     { data: dailyTasks },
   ] = await Promise.all([
-    supabase.from('pain_points').select('*').eq('owner_id', OWNER_ID),
-    supabase.from('tasks').select('*').eq('owner_id', OWNER_ID),
-    supabase.from('goals').select('*').eq('owner_id', OWNER_ID),
-    supabase.from('followups').select('*').eq('owner_id', OWNER_ID).eq('status', 'pending').order('due_date'),
-    supabase.from('user_settings').select('start_date, display_name, role_title').eq('owner_id', OWNER_ID).single(),
-    supabase.from('daily_tasks').select('*').eq('owner_id', OWNER_ID).eq('date', todayStr).order('order_index').order('created_at'),
+    supabase.from('pain_points').select('*').eq('owner_id', userId),
+    supabase.from('tasks').select('*').eq('owner_id', userId),
+    supabase.from('goals').select('*').eq('owner_id', userId),
+    supabase.from('followups').select('*').eq('owner_id', userId).eq('status', 'pending').order('due_date'),
+    supabase.from('user_settings').select('start_date, display_name, role_title').eq('owner_id', userId).single(),
+    supabase.from('daily_tasks').select('*').eq('owner_id', userId).eq('date', todayStr).order('order_index').order('created_at'),
   ])
 
   const pp  = painPoints ?? []

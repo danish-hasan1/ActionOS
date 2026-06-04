@@ -7,7 +7,7 @@ import { Plus, Search, AlertTriangle, Pencil, Trash2, Check, X, MoreHorizontal }
 import type { PainPoint, Tag, Severity, PainPointStatus, Phase } from '@/types'
 import {
   Badge, TagBadge, EmptyState, Button, Modal, FormField,
-  inputCls, selectCls, textareaCls, Card
+  inputCls, selectCls, textareaCls, Card, ShareButton
 } from '@/components/ui'
 import { SEVERITY_CONFIG, PAIN_STATUS_CONFIG, PHASE_CONFIG, formatDate, cn } from '@/lib/utils'
 
@@ -247,12 +247,13 @@ function PainPointModal({
 
 // ─── Pain Point Row Card ──────────────────────────────────────
 function PainPointCard({
-  pp, tags, onEdit, onDelete
+  pp, tags, onEdit, onDelete, userId
 }: {
   pp: PainPoint
   tags: Tag[]
   onEdit: (_pp: PainPoint) => void
   onDelete: (_id: string) => void
+  userId: string
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const sev = SEVERITY_CONFIG[pp.severity]
@@ -270,10 +271,11 @@ function PainPointCard({
             <h3 className="font-semibold text-slate-800 text-sm leading-snug group-hover:text-indigo-700 transition-colors" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               {pp.title}
             </h3>
-            <div className="relative shrink-0">
+            <div className="relative shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+              <ShareButton table="pain_points" itemId={pp.id} currentUserId={userId} />
               <button
                 onClick={() => setMenuOpen(v => !v)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors opacity-0 group-hover:opacity-100"
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -438,7 +440,7 @@ export default function PainPointsClient({
       ) : (
         <div className="grid gap-3">
           {filtered.map(pp => (
-            <PainPointCard key={pp.id} pp={pp} tags={allTags} onEdit={openEdit} onDelete={handleDelete} />
+            <PainPointCard key={pp.id} pp={pp} tags={allTags} onEdit={openEdit} onDelete={handleDelete} userId={userId} />
           ))}
         </div>
       )}
