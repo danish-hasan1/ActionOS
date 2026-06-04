@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export const dynamic = 'force-dynamic'
+
 const COOKIE = 'apos_uid'
 const opts = { httpOnly: true, path: '/', sameSite: 'strict' as const, maxAge: 60 * 60 * 24 * 30 }
 
