@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, Users } from 'lucide-react'
 import { useState } from 'react'
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -54,6 +54,13 @@ export default function TopBar({
           <span className="text-white text-xs font-bold">{initials}</span>
         </div>
         <button
+          onClick={() => router.push('/')}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          title="Switch user"
+        >
+          <Users className="w-4 h-4" />
+        </button>
+        <button
           onClick={handleLogout}
           disabled={signingOut}
           className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
@@ -79,6 +86,14 @@ export default function TopBar({
           </div>
           <span className="text-sm text-gray-600 font-medium">{name}</span>
         </div>
+        <button
+          onClick={() => router.push('/')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 transition-all text-xs font-medium"
+          title="Switch user"
+        >
+          <Users className="w-3.5 h-3.5" />
+          Switch user
+        </button>
         <button
           onClick={handleLogout}
           disabled={signingOut}
