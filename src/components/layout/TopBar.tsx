@@ -54,7 +54,7 @@ export default function TopBar({
           <span className="text-white text-xs font-bold">{initials}</span>
         </div>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => { window.location.href = '/' }}
           className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
           title="Switch user"
         >
@@ -87,7 +87,7 @@ export default function TopBar({
           <span className="text-sm text-gray-600 font-medium">{name}</span>
         </div>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => { window.location.href = '/' }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 transition-all text-xs font-medium"
           title="Switch user"
         >

@@ -130,7 +130,7 @@ export default function LoginPage() {
         body: JSON.stringify({ action: 'login', userId: selectedUser?.id, pin: pinStr }),
       })
       if (res.ok) {
-        router.push('/dashboard')
+        window.location.href = '/dashboard'
       } else {
         const body = await res.json()
         triggerShake(body.error || 'Wrong PIN')
@@ -156,7 +156,7 @@ export default function LoginPage() {
         body: JSON.stringify({ action: 'register', name: newName, pin: pinStr }),
       })
       if (res.ok) {
-        router.push('/dashboard')
+        window.location.href = '/dashboard'
       } else {
         const body = await res.json()
         triggerShake(body.error || 'Registration failed')
