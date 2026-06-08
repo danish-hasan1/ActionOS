@@ -364,9 +364,12 @@ export default function DailyClient({ initialTasks, userId }: {
 
   async function bulkCopyPending(toDate: string) {
     if (!toDate || unchecked.length === 0) return
+    const existingTitles = new Set(tasks.filter(t => t.date === toDate).map(t => t.title.toLowerCase()))
+    const toAdd = unchecked.filter(t => !existingTitles.has(t.title.toLowerCase()))
+    if (!toAdd.length) { toast.error('All tasks already exist on that date'); return }
     const existing = tasks.filter(t => t.date === toDate)
     const { data, error } = await carryForwardTasks(
-      unchecked.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: existing.length + i })),
+      toAdd.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: existing.length + i })),
       toDate,
       userId
     )
@@ -379,7 +382,8 @@ export default function DailyClient({ initialTasks, userId }: {
 
     setTasks(prev => [...prev, ...(data as DailyTask[])])
     const label = toDate === toLocalISO(new Date()) ? 'today' : toDate
-    toast.success(`${unchecked.length} task${unchecked.length > 1 ? 's' : ''} rescheduled to ${label}`)
+    const skipped = unchecked.length - toAdd.length
+    toast.success(`${toAdd.length} task${toAdd.length > 1 ? 's' : ''} rescheduled to ${label}${skipped ? ` (${skipped} skipped — already exist)` : ''}`)
     setBulkCopying(false)
     setBulkDate('')
   }
@@ -387,6 +391,8 @@ export default function DailyClient({ initialTasks, userId }: {
   async function copyTask(id: string, toDate: string) {
     const task = tasks.find(t => t.id === id)
     if (!task) return
+    const alreadyExists = tasks.some(t => t.date === toDate && t.title.toLowerCase() === task.title.toLowerCase())
+    if (alreadyExists) { toast.error('Task already exists on that date'); return }
     const existing = tasks.filter(t => t.date === toDate)
     const payload = {
       title: task.title,
@@ -434,19 +440,22 @@ export default function DailyClient({ initialTasks, userId }: {
 
   async function handleCarryForward() {
     if (yesterdayUncompleted.length === 0) return
+    const existingTitles = new Set(dayTasks.map(t => t.title.toLowerCase()))
+    const toAdd = yesterdayUncompleted.filter(t => !existingTitles.has(t.title.toLowerCase()))
+    if (!toAdd.length) { toast.error('All tasks already exist for today'); return }
     const { data, error } = await carryForwardTasks(
-      yesterdayUncompleted.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: dayTasks.length + i })),
+      toAdd.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: dayTasks.length + i })),
       selectedDate,
       userId
     )
     if (error) { toast.error(error) }
     else {
-      // Mark originals as done so they don't re-appear
       const ids = yesterdayUncompleted.map(t => t.id)
       setTasks(prev => prev.map(t => ids.includes(t.id) ? { ...t, checked: true } : t))
       await Promise.all(ids.map(id => upsertDailyTask({ checked: true }, id)))
       setTasks(prev => [...prev, ...(data as DailyTask[])])
-      toast.success(`${yesterdayUncompleted.length} task${yesterdayUncompleted.length > 1 ? 's' : ''} carried forward`)
+      const skipped = yesterdayUncompleted.length - toAdd.length
+      toast.success(`${toAdd.length} task${toAdd.length > 1 ? 's' : ''} carried forward${skipped ? ` (${skipped} skipped — already exist)` : ''}`)
     }
   }
 
@@ -465,9 +474,12 @@ export default function DailyClient({ initialTasks, userId }: {
   async function pullFromDate(fromDate: string) {
     const pending = tasks.filter(t => t.date === fromDate && !t.checked)
     if (!pending.length) return
+    const existingTitles = new Set(tasks.filter(t => t.date === selectedDate).map(t => t.title.toLowerCase()))
+    const toAdd = pending.filter(t => !existingTitles.has(t.title.toLowerCase()))
+    if (!toAdd.length) { toast.error('All tasks already exist on this date'); return }
     const existing = tasks.filter(t => t.date === selectedDate)
     const { data, error } = await carryForwardTasks(
-      pending.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: existing.length + i })),
+      toAdd.map((t, i) => ({ title: t.title, priority: t.priority, notes: t.notes, order_index: existing.length + i })),
       selectedDate,
       userId
     )
@@ -477,7 +489,8 @@ export default function DailyClient({ initialTasks, userId }: {
     setTasks(prev => prev.map(t => ids.includes(t.id) ? { ...t, checked: true } : t))
     await Promise.all(ids.map(id => upsertDailyTask({ checked: true }, id)))
     setTasks(prev => [...prev, ...(data as DailyTask[])])
-    toast.success(`${pending.length} task${pending.length > 1 ? 's' : ''} pulled from ${formatDisplayDate(fromDate)}`)
+    const skipped = pending.length - toAdd.length
+    toast.success(`${toAdd.length} task${toAdd.length > 1 ? 's' : ''} pulled from ${formatDisplayDate(fromDate)}${skipped ? ` (${skipped} skipped — already exist)` : ''}`)
     setShowPullPanel(false)
   }
 
